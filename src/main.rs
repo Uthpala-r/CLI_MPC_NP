@@ -1,4 +1,4 @@
-//! # PNF Command-Line Interface (CLI) Application
+//! # Network Command-Line Interface (CLI) Application
 //!
 //! This file serves as the main module that initializes and links all other sub-modules.
 //! The CLI provides a hierarchical command structure similar to Cisco's networking devices.
@@ -63,10 +63,10 @@ use std::thread;
 ///
 /// # Example Usage
 /// ```bash
-/// > PNF> enable
-/// > PNF# configure terminal
-/// > PNF(config)# [Ctrl+C pressed]
-/// > PNF# exit cli
+/// > Network> enable
+/// > Network# configure terminal
+/// > Network(config)# [Ctrl+C pressed]
+/// > Network# exit cli
 /// Exiting CLI...
 /// ```
 ///
@@ -86,8 +86,8 @@ fn main() {
     let commands = build_command_registry();
     let command_names: Vec<String> = commands.keys().cloned().map(String::from).collect();
     
-    // Define the initial hostname as "PNF"
-    let _initial_hostname = "PNF".to_string();
+    // Define the initial hostname as "Network"
+    let _initial_hostname = "Network".to_string();
     
     // Define the context for the CLI
     let mut context = CliContext {

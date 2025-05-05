@@ -197,6 +197,37 @@ impl Completer for CommandCompleter {
                             });
                         
                         }
+                    } else if parts[0] == "network" {
+                        if parts[2].starts_with("i") {
+                            let show_options = vec!["ip"];
+                            for option in show_options {
+                                candidates.push(Pair {
+                                    display: format!("{}", option),
+                                    replacement: format!("{}", option),
+                                });
+                            
+                            }
+                        }
+                        else if parts[2].starts_with("n") {
+                            let show_options = vec!["netmask"];
+                            for option in show_options {
+                                candidates.push(Pair {
+                                    display: format!("{}", option),
+                                    replacement: format!("{}", option),
+                                });
+                            
+                            }
+                        }
+                        if parts[2].starts_with("a") {
+                            let show_options = vec!["area"];
+                            for option in show_options {
+                                candidates.push(Pair {
+                                    display: format!("{}", option),
+                                    replacement: format!("{}", option),
+                                });
+                            
+                            }
+                        }
                     }
                     else if let Some(command) = suggestions.get(parts[0]) {
                         if let Some(subcommands) = &command.suggestions2 {
@@ -333,18 +364,16 @@ impl Completer for CommandCompleter {
 fn is_command_allowed_in_mode(command: &String, mode: &Mode) -> bool {
     match mode {
         Mode::UserMode => matches!(command.as_str(), "enable" | "do" | "disable" | "traceroute" | "connect" | "reload" | "poweroff" | "exit" | "clear" | "help" | "show" | "dhcp_enable" | "ping" | "write" | "ifconfig" | "ip"),
-        Mode::PrivilegedMode => matches!(command.as_str(), "configure" | "do" | "ssh" | "disable" | "traceroute" | "connect" | "reload" | "poweroff" | "debug" | "undebug" | "exit" | "clear" | "help" | "write" | "copy" | "clock" | "dhcp_enable" | "ping" | "show" | "ifconfig" | "ip"),
-        Mode::ConfigMode => matches!(command.as_str(), "hostname" | "do" | "interface" | "connect" | "disable" | "traceroute" | "reload" | "poweroff" | "no" | "exit" | "clear" | "help" | "write" | "dhcp_enable" | "ping" | "enable" | "service" | "set" | "ifconfig" | "ntp" | "ip" | "sdm" |"bitd" | "ptm" | "rtxc" | "infodist" | "sysmon" | "high_availability"),
-        Mode::InterfaceMode => matches!(command.as_str(), "exit" | "do" | "reload" | "poweroff" | "shutdown" | "no" | "clear" | "help" | "write" | "interface" | "ip" ),
-        Mode::SDMMode => matches!(command.as_str(), "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "Transfer_sw" | "Update" | "Rollback" | "Get_version" | "Get_all_versions"), 
-        Mode::BITDMode => matches!(command.as_str(), "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "Initiate" | "Get_logs" | "Get_status" | "Clear_logs" | "Set_threshold"| "List_failures"| "Get_diagnostics"| "Run_health_check"| "Enable_auto_diagnostics"),
-        Mode::TPMMode => matches!(command.as_str(), "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "Set_remote_position" | "Set_local_position" | "Provide_position" | "Provide_time" | "Select_time_source" | "Get_time_source" | "Sync_time_now" | "Get_sync_status" | "Enable_holdover" | "Get_holdover_status" | "Validate_time_source" | "Set_manual_time" | "Enable_security_checks" | "Get_security_status"),
-        Mode::RTxCMode => matches!(command.as_str(), "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "emcon" | "rf_mode"  | "get_rf_status"  | "set_power_level"  | "get_power_level"  | "lock_rf_config"  | "unlock_rf_config"  | "force_tx_enable"  | "reset_rf_settings"  | "set_emcon_timer"  | "get_emcon_status" | "enable_rx_only_override"  | "log_rf_activity" ),
-        Mode::InfoDistMode => matches!(command.as_str(), "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "reset_relay_settings"| "set_mode"| "enable_relay"| "disable_relay"| "get_mode"| "get_relay_status"| "log_relay_activity"| "set_qos_priority"| "manual_override_relay"| "set_relay_timeout"| "get_relay_timeout"),
-        Mode::SysMonitorMode => matches!(command.as_str(), "exit" | "do" | "reload" | "poweroff" | "clear" | "help" |"set_syslog_server" |"enable_syslog" |"disable_syslog" |"test_syslog" |"show_syslog_status" |"show_log" |"set_alert" |"get_alerts" |"snmpget" |"snmptrap"|"deactivate_battleshort" |"activate_battleshort" |"battleshort_status"|"release_remote_access"|"remote_exclusive_access" |"show_remote_access_status"|"show_error_log"|"clear_ui_display" |"test_ui_alert"),
-        Mode::HighAvaMode => matches!(command.as_str(), "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "set_role" | "get_role" | "force_failover" | "enable_auto_failover" | "disable_auto_failover" | "set_ha_priority" | "get_ha_priority" | "sync_state" | "get_sync_status" | "get_health_status" | "enable_snmp_notifications" | "disable_snmp_notifications" | "get_snmp_status" | "get_failover_logs" | "set_failover_timeout" | "test_failover" | "reset_ha_settings"),
-        Mode::NetworkProcessor => matches!(command.as_str(), "exit"),
-        Mode::Sem => matches!(command.as_str(), "exit"),
+        Mode::PrivilegedMode => matches!(command.as_str(), "config" | "do" | "ssh" | "disable" | "traceroute" | "connect" | "reload" | "poweroff" | "debug" | "undebug" | "exit" | "clear" | "help" | "write" | "copy" | "clock" | "dhcp_enable" | "ping" | "show" | "ifconfig" | "ip"),
+        Mode::ConfigMode => matches!(command.as_str(), "config" | "enable" | "hostname" | "do" | "interface" | "connect" | "disable" | "traceroute" | "reload" | "poweroff" | "no" | "exit" | "clear" | "help" | "write" | "dhcp_enable" | "ping" | "enable" | "service" | "set" | "ifconfig" | "ntp" | "ip" | "sdm" |"bitd" | "ptm" | "rtxc" | "infodist" | "sysmon" | "high_availability"),
+        Mode::InterfaceMode => matches!(command.as_str(), "exit" | "disable" | "do" | "reload" | "poweroff" | "shutdown" | "no" | "clear" | "help" | "write" | "interface" | "ip" ),
+        Mode::VlanMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "Transfer_sw" | "Update" | "Rollback" | "Get_version" | "Get_all_versions"), 
+        Mode::QosMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "Initiate" | "Get_logs" | "Get_status" | "Clear_logs" | "Set_threshold"| "List_failures"| "Get_diagnostics"| "Run_health_check"| "Enable_auto_diagnostics"),
+        Mode::DynamicRMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "network" | "redistribute" | "valid" | "controller"),
+        Mode::PortSMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "emcon" | "rf_mode"  | "get_rf_status"  | "set_power_level"  | "get_power_level"  | "lock_rf_config"  | "unlock_rf_config"  | "force_tx_enable"  | "reset_rf_settings"  | "set_emcon_timer"  | "get_emcon_status" | "enable_rx_only_override"  | "log_rf_activity" ),
+        Mode::MonitoringMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "logging_level"),
+        Mode::AutoDMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" |"set_syslog_server" |"enable_syslog" |"disable_syslog" |"test_syslog" |"show_syslog_status" |"show_log" |"set_alert" |"get_alerts" |"snmpget" |"snmptrap"|"deactivate_battleshort" |"activate_battleshort" |"battleshort_status"|"release_remote_access"|"remote_exclusive_access" |"show_remote_access_status"|"show_error_log"|"clear_ui_display" |"test_ui_alert"),
+        
     }
 }
 

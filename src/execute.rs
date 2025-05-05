@@ -21,15 +21,12 @@ pub enum Mode {
     PrivilegedMode,
     ConfigMode,
     InterfaceMode,
-    SDMMode,
-    BITDMode,
-    TPMMode,
-    RTxCMode,
-    InfoDistMode,
-    SysMonitorMode,
-    HighAvaMode,
-    NetworkProcessor,
-    Sem,
+    VlanMode,
+    QosMode,
+    DynamicRMode,
+    PortSMode,
+    MonitoringMode,
+    AutoDMode,
 
 }
 
@@ -109,7 +106,94 @@ ip
 login
 arp"#);
                         }
-                    }  
+                    }  else if command_name == "config" {
+                        if matches!(context.current_mode, Mode::PrivilegedMode){
+                            //println!("Possible Completions");
+                            println!("network_manager");
+                        } else if matches!(context.current_mode, Mode::DynamicRMode){
+                            //println!("Possible Completions");
+                            println!(r#"ospf
+rip
+vlan
+qosr
+dynrouter
+portsec
+mon
+autod"#);
+                        } 
+                        else if !matches!(context.current_mode, Mode::UserMode | Mode::PrivilegedMode){
+                            //println!("Possible Completions");
+                            println!(r#"vlan
+qosr
+dynrouter
+portsec
+mon
+autod"#);
+                        } 
+                    } else if command_name == "enable" {
+                        if matches!(context.current_mode, Mode::ConfigMode){
+                            //println!("Possible Completions");
+                            println!(r#"password
+secret
+network_manager"#);
+                        } else if matches!(context.current_mode, Mode::VlanMode){
+                            //println!("Possible Completions");
+                            println!(r#"vlan_manager"#);
+                        }
+                        else if matches!(context.current_mode, Mode::QosMode){
+                            //println!("Possible Completions");
+                            println!(r#"qos_manager"#);
+                        }
+                        else if matches!(context.current_mode, Mode::DynamicRMode){
+                            //println!("Possible Completions");
+                            println!(r#"dynamic_router_manager
+ospf
+rip
+ospf_controller
+rip_controller"#);
+                        }
+                        else if matches!(context.current_mode, Mode::PortSMode){
+                            //println!("Possible Completions");
+                            println!(r#"port_security_manager"#);
+                        }
+                        else if matches!(context.current_mode, Mode::MonitoringMode){
+                            //println!("Possible Completions");
+                            println!(r#"monitoring_manager
+coredump_login"#);
+                        }
+                        else if matches!(context.current_mode, Mode::AutoDMode){
+                            //println!("Possible Completions");
+                            println!(r#"auto_discovery_manager"#);
+                        }
+                    } else if command_name == "disable" {
+                        if matches!(context.current_mode, Mode::ConfigMode){
+                            //println!("Possible Completions");
+                            println!(r#"network_manager"#);
+                        } else if matches!(context.current_mode, Mode::VlanMode){
+                            //println!("Possible Completions");
+                            println!(r#"vlan_manager"#);
+                        }
+                        else if matches!(context.current_mode, Mode::QosMode){
+                            //println!("Possible Completions");
+                            println!(r#"qos_manager"#);
+                        }
+                        else if matches!(context.current_mode, Mode::DynamicRMode){
+                            //println!("Possible Completions");
+                            println!(r#"dynamic_router_manager"#);
+                        }
+                        else if matches!(context.current_mode, Mode::PortSMode){
+                            //println!("Possible Completions");
+                            println!(r#"port_security_manager"#);
+                        }
+                        else if matches!(context.current_mode, Mode::MonitoringMode){
+                            //println!("Possible Completions");
+                            println!(r#"monitoring_manager"#);
+                        }
+                        else if matches!(context.current_mode, Mode::AutoDMode){
+                            //println!("Possible Completions");
+                            println!(r#"auto_discovery_manager"#);
+                        }
+                    }
                     else {
                         println!("No subcommands or more options available");
                     }
@@ -318,7 +402,23 @@ arp"#);
                     println!("Possible completions:");
                     println!("<subnetmask>   - Enter the subnet mask");
                 }
-            }
+            } else if command_name == "network" {
+                match param1{
+                    "ip" => {
+                        println!("Possible completions:");
+                        println!("<ip_address>              - Enter the ip address");
+                    },
+                    "netmask" => {
+                        println!("Possible completions:");
+                        println!("<netmask>                 - Enter the netmask");
+                    },
+                    "area" => {
+                        println!("Possible completions:");
+                        println!("<area>                    - Enter the area");
+                    },
+                    _ => println!("No additional parameters available")
+                }
+            } 
             else if command_name == "do" {
                 if subcommand == "show" {    
                     match param1 {
@@ -379,15 +479,7 @@ arp"#);
             let command_name = parts[0];
             let subcommand = parts[1];
 
-            if command_name == "ntp" {
-                match subcommand {
-                    "authentication-key" => {
-                        println!("Possible completions:");
-                        println!("<key-name>              - Configure key name");
-                    },
-                    _ => println!("No additional parameters available")
-                }
-            } else if command_name == "clock"{
+            if command_name == "clock"{
                 match subcommand  {  
                     "set" => {  
                         println!("Possible completions:");
@@ -479,7 +571,7 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
         Mode::PrivilegedMode => {
             commands.keys()
                 .filter(|&&cmd| {
-                    cmd == "configure" ||
+                    cmd == "config" ||
                     cmd == "ping" || 
                     cmd == "exit" || 
                     cmd == "write" ||
@@ -507,6 +599,8 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
         Mode::ConfigMode => {
             commands.keys()
                 .filter(|&&cmd| {
+                    cmd == "config" ||
+                    cmd == "enable" ||
                     cmd == "hostname" || 
                     cmd == "ping" ||
                     cmd == "exit" ||
@@ -515,7 +609,6 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                     cmd == "write" ||
                     cmd == "service" ||
                     cmd == "set" ||
-                    cmd == "enable" ||
                     cmd == "ifconfig" ||  
                     cmd == "ntp" ||
                     cmd == "no" || 
@@ -543,6 +636,7 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
             commands.keys()
                 .filter(|&&cmd| {
                     cmd == "shutdown" ||
+                    cmd == "disable" ||
                     cmd == "no" ||
                     cmd == "exit" ||
                     cmd == "clear" ||
@@ -557,9 +651,12 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                 .copied()
                 .collect()
         }
-        Mode::SDMMode => {
+        Mode::VlanMode => {
             commands.keys()
                 .filter(|&&cmd| {
+                    cmd == "config" ||
+                    cmd == "enable" ||
+                    cmd == "disable" ||
                     cmd == "exit" ||
                     cmd == "clear" ||
                     cmd == "help" ||
@@ -575,9 +672,12 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                 .copied()
                 .collect()
         }
-        Mode::BITDMode => {
+        Mode::QosMode => {
             commands.keys()
                 .filter(|&&cmd| {
+                    cmd == "config" ||
+                    cmd == "enable" ||
+                    cmd == "disable" ||
                     cmd == "exit" ||
                     cmd == "clear" ||
                     cmd == "help" ||
@@ -597,36 +697,32 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                 .copied()
                 .collect()
         }
-        Mode::TPMMode => {
+        Mode::DynamicRMode => {
             commands.keys()
                 .filter(|&&cmd| {
+                    cmd == "config" ||
+                    cmd == "enable" ||
+                    cmd == "network" ||
+                    cmd == "redistribute" ||
+                    cmd == "valid" ||
+                    cmd == "controller" ||
+                    cmd == "disable" ||
                     cmd == "exit" ||
                     cmd == "clear" ||
                     cmd == "help" ||
                     cmd == "reload" ||
                     cmd == "poweroff" ||
-                    cmd == "do" ||
-                    cmd == "Set_remote_position" ||
-                    cmd == "Set_local_position" ||
-                    cmd == "Provide_position" ||
-                    cmd == "Provide_time" ||
-                    cmd == "Select_time_source" ||
-                    cmd == "Get_time_source" ||
-                    cmd == "Sync_time_now" ||
-                    cmd == "Get_sync_status" ||
-                    cmd == "Enable_holdover" ||
-                    cmd == "Get_holdover_status" ||
-                    cmd == "Validate_time_source" ||
-                    cmd == "Set_manual_time" ||
-                    cmd == "Enable_security_checks" ||
-                    cmd == "Get_security_status" 
+                    cmd == "do" 
                 })
                 .copied()
                 .collect()
         }
-        Mode::RTxCMode => {
+        Mode::PortSMode => {
             commands.keys()
                 .filter(|&&cmd| {
+                    cmd == "config" ||
+                    cmd == "enable" ||
+                    cmd == "disable" ||
                     cmd == "exit" ||
                     cmd == "clear" ||
                     cmd == "help" ||
@@ -650,33 +746,29 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                 .copied()
                 .collect()
         }
-        Mode::InfoDistMode => {
+        Mode::MonitoringMode => {
             commands.keys()
                 .filter(|&&cmd| {
+                    cmd == "config" ||
+                    cmd == "enable" ||
+                    cmd == "disable" ||
                     cmd == "exit" ||
                     cmd == "clear" ||
                     cmd == "help" ||
                     cmd == "reload" ||
                     cmd == "poweroff" ||
                     cmd == "do" ||
-                    cmd == "set_mode" ||
-                    cmd == "enable_relay" ||
-                    cmd == "disable_relay" ||
-                    cmd == "get_mode" ||
-                    cmd == "get_relay_status" ||
-                    cmd == "log_relay_activity" ||
-                    cmd == "set_qos_priority" ||
-                    cmd == "manual_override_relay" ||
-                    cmd == "set_relay_timeout" ||
-                    cmd == "get_relay_timeout" ||
-                    cmd == "reset_relay_settings" 
+                    cmd == "logging_level" 
                 })
                 .copied()
                 .collect()
         }
-        Mode::SysMonitorMode => {
+        Mode::AutoDMode => {
             commands.keys()
                 .filter(|&&cmd| {
+                    cmd == "config" ||
+                    cmd == "enable" ||
+                    cmd == "disable" ||
                     cmd == "exit" ||
                     cmd == "clear" ||
                     cmd == "help" ||
@@ -706,54 +798,7 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                 .copied()
                 .collect()
         }
-        Mode::HighAvaMode => {
-            commands.keys()
-                .filter(|&&cmd| {
-                    cmd == "exit" ||
-                    cmd == "clear" ||
-                    cmd == "help" ||
-                    cmd == "reload" ||
-                    cmd == "poweroff" ||
-                    cmd == "do" ||
-                    cmd == "set_role" ||
-                    cmd == "get_role" ||
-                    cmd == "force_failover" ||
-                    cmd == "enable_auto_failover" ||
-                    cmd == "disable_auto_failover" ||
-                    cmd == "set_ha_priority" ||
-                    cmd == "get_ha_priority" ||
-                    cmd == "sync_state" ||
-                    cmd == "get_sync_status" ||
-                    cmd == "get_health_status" ||
-                    cmd == "enable_snmp_notifications" ||
-                    cmd == "disable_snmp_notifications" ||
-                    cmd == "get_snmp_status" ||
-                    cmd == "get_failover_logs" ||
-                    cmd == "set_failover_timeout" ||
-                    cmd == "test_failover" ||
-                    cmd == "reset_ha_settings" 
-                })
-                .copied()
-                .collect()
-        }
-
-        Mode::NetworkProcessor => {
-            commands.keys()
-                .filter(|&&cmd| {
-                    cmd == "exit" 
-                })
-                .copied()
-                .collect()
-        }
-
-        Mode::Sem => {
-            commands.keys()
-                .filter(|&&cmd| {
-                    cmd == "exit" 
-                })
-                .copied()
-                .collect()
-        }
+        
     }
 }
 

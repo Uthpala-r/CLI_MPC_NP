@@ -16,7 +16,7 @@ use crate::network_config::NtpAssociation;
 /// # Examples
 /// ```
 /// let config = CliConfig::default();
-/// assert_eq!(config.hostname, "PNF");
+/// assert_eq!(config.hostname, "Network");
 /// ```
 /// 
 #[derive(Serialize, Deserialize, Clone)]
@@ -41,7 +41,7 @@ impl Default for CliConfig {
     ///
     /// - `running_config`: An empty `HashMap`.
     /// - `startup_config`: An empty `HashMap`.
-    /// - `hostname`: `"PNF"`.
+    /// - `hostname`: `"Network"`.
     /// - `crypto_ipsec_profile: None`,
     /// - `transform_sets: None`,
     /// - `tunnel_mode: None`,
@@ -57,7 +57,7 @@ impl Default for CliConfig {
         Self {
             running_config: None,
             startup_config: None,
-            hostname: "PNF".to_string(),
+            hostname: "Network".to_string(),
             enable_password: None,          
             enable_secret: None,   
             encrypted_password: None,          
@@ -79,7 +79,7 @@ impl Default for CliConfig {
 /// # Examples
 /// ```
 /// let context = CliContext::default();
-/// assert_eq!(context.prompt, "PNF>");
+/// assert_eq!(context.prompt, "Network>");
 /// ```
 /// 
 #[derive(Clone)]
@@ -103,7 +103,7 @@ impl Default for CliContext {
     /// Provides the default values for `CliContext`.
     ///
     /// - `current_mode`: `Mode::UserMode`.
-    /// - `prompt`: `"PNF>"`.
+    /// - `prompt`: `"Network>"`.
     /// - `config`: The default configuration provided by `CliConfig::default()`.
     /// - `selected_interface`: `None`.
     /// - `selected_vlan`: `None`.
@@ -122,7 +122,7 @@ impl Default for CliContext {
     fn default() -> Self {
         Self {
             current_mode: Mode::UserMode,
-            prompt: "PNF>".into(),
+            prompt: "Network>".into(),
             config: CliConfig::default(),
             selected_interface: None,
             ntp_source_interface: None,

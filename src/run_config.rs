@@ -221,7 +221,7 @@ Two styles of help are provided:
                     println!("do                - With do show, the show commands available in other modes can be executed");
                     println!("poweroff          - Power off the system");
                 }
-                else if matches!(context.current_mode, Mode::SDMMode) {
+                else if matches!(context.current_mode, Mode::VlanMode) {
                     println!("exit              - Exit to config mode");
                     println!("help              - Display available commands");
                     println!("reload            - Reload the system");
@@ -234,7 +234,7 @@ Two styles of help are provided:
                     println!("Get_version       - Retrieves the firmware version for the specified target device");
                     println!("Get_all_versions  - Returns detailed information about all stored firmware versions to the requester");
                 }
-                else if matches!(context.current_mode, Mode::BITDMode) {
+                else if matches!(context.current_mode, Mode::QosMode) {
                     println!("exit                      - Exit to config mode");
                     println!("help                      - Display available commands");
                     println!("reload                    - Reload the system");
@@ -251,7 +251,7 @@ Two styles of help are provided:
                     println!("Run_health_check          - Runs a quick system-wide health check using BITD tests and returns a summary");
                     println!("Enable_auto_diagnostics   - Turns automatic failure diagnostics on or off for CBIT failures.");
                 }
-                else if matches!(context.current_mode, Mode::TPMMode) {
+                else if matches!(context.current_mode, Mode::DynamicRMode) {
                     println!("exit                  - Exit to config mode");
                     println!("help                  - Display available commands");
                     println!("reload                - Reload the system");
@@ -273,7 +273,7 @@ Two styles of help are provided:
                     println!("Enable_security_checks- Enables or disables authentication and validation checks for time and position data.");
                     println!("Get_security_status   - Returns the status of integrity checks, including spoofing detection results.");
                 }
-                else if matches!(context.current_mode, Mode::RTxCMode) {
+                else if matches!(context.current_mode, Mode::PortSMode) {
                     println!("exit                      - Exit to config mode");
                     println!("help                      - Display available commands");
                     println!("reload                    - Reload the system");
@@ -294,7 +294,7 @@ Two styles of help are provided:
                     println!("enable_rx_only_override   - Allows remote control to disable Rx_only mode when necessary ");
                     println!("log_rf_activity           - Retrieves a log of recent RF mode changes and power adjustments.");
                 }
-                else if matches!(context.current_mode, Mode::InfoDistMode) {
+                else if matches!(context.current_mode, Mode::MonitoringMode) {
                     println!("exit                  - Exit to config mode");
                     println!("help                  - Display available commands");
                     println!("reload                - Reload the system");
@@ -314,7 +314,7 @@ Two styles of help are provided:
                     println!("reset_relay_setting   - Restores relay-related settings to default values.");
                     
                 }
-                else if matches!(context.current_mode, Mode::SysMonitorMode) {
+                else if matches!(context.current_mode, Mode::AutoDMode) {
                     println!("exit                      - Exit to config mode");
                     println!("help                      - Display available commands");
                     println!("reload                    - Reload the system");
@@ -341,30 +341,6 @@ Two styles of help are provided:
                     println!("clear_ui_display          - Clears error messages from the UI display.");
                     println!("test_ui_alert             - Sends a test alert to the UI MCU for verification.");
                 }
-                else if matches!(context.current_mode, Mode::HighAvaMode) {
-                    println!("exit                          - Exit to config mode");
-                    println!("help                          - Display available commands");
-                    println!("reload                        - Reload the system");
-                    println!("clear                         - Clear the terminal");
-                    println!("do                            - With do show, the show commands available in other modes can be executed");
-                    println!("poweroff                      - Power off the system");
-                    println!("set_role                      - Assigns a node as the active or standby system.");
-                    println!("get_role                      - Retrieves the current role of the node ");
-                    println!("force_failover                - Manually triggers failover to the standby node.");
-                    println!("enable_auto_failover          - Activates automatic failover when failures are detected.");
-                    println!("disable_auto_failover         - Disables automatic failover, requiring manual intervention.");
-                    println!("set_ha_priority               - Defines a priority level for failover ");
-                    println!("get_ha_priority               - Retrieves the currently configured failover priority level.");
-                    println!("sync_state                    - Forces synchronization between the active and standby nodes.");
-                    println!("get_sync_status               - Displays the status of the last synchronization event.");
-                    println!("get_health_status             - Retrieves system health metrics ");
-                    println!("enable_snmp_notifications     - Enables SNMP v3 alerts for high-availability events.");
-                    println!("disable_snmp_notifications    - Disables SNMP alerts.");
-                    println!("get_snmp_status               - Checks whether SNMP alerts are enabled or disabled.");
-                    println!("get_failover_logs             - Fetches logs of recent failover events for auditing.");
-                    println!("set_failover_timeout          - Defines the timeout before failover is triggered");
-                    println!("test_failover                 - Simulates a failover event for validation purposes.");
-                    println!("reset_ha_settings             - Restores HA configurations to default values");
-                }
+                
                 println!("\n ");
 }
