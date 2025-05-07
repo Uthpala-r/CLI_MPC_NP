@@ -152,13 +152,12 @@ Two styles of help are provided:
                     println!("show              - Some available show commands are present. To view enter 'show ?'");
                     println!("write             - Save the configuration");
                     println!("ifconfig          - Display interface configuration");
-                    println!("connect           - Connect the Network Processor, SEM or the VMs");
                     println!("ip                - Check the interface configurations");
                     println!("do                - With do show, the show commands available in other modes can be executed");
                     println!("poweroff          - Power off the system");
                 }
                 else if matches!(context.current_mode, Mode::PrivilegedMode) {
-                    println!("configure         - Enter configuration mode");
+                    println!("config            - Enter configuration mode");
                     println!("exit              - Exit to user mode");
                     println!("help              - Display available commands");
                     println!("write             - Save the configuration");
@@ -173,7 +172,6 @@ Two styles of help are provided:
                     println!("clear             - Clear the terminal");
                     println!("debug             - Debug the availbale processes");
                     println!("undebug           - Undebug the availbale processes");
-                    println!("connect           - Connect the Network Processor or the SEM");
                     println!("ssh               - Connect via SSH or show ssh version");
                     println!("disable           - Exit the Privileged EXEC Mode and enter the USER EXEC Mode");
                     println!("ip                - Check the interface configurations");
@@ -188,25 +186,16 @@ Two styles of help are provided:
                     println!("dhcp_enable       - Enable DHCP for networking");
                     println!("ping              - Send ICMP echo request");
                     println!("traceroute        - Display the packet transfer path");
-                    println!("enable            - Enter privileged mode");
+                    println!("enable            - Enable services");
                     println!("service password encryption - Encrypt passwords defined for the device");
                     println!("ifconfig          - Configure interface");
-                    println!("ntp               - Configure NTP");
-                    println!("no                - Reverse configurations");
-                    println!("clock               - Create configurations (clock set)");
+                    println!("clock             - Create configurations (clock set)");
                     println!("reload            - Reload the system");
                     println!("clear             - Clear the terminal");
                     println!("ip                - Check the interface configurations");
                     println!("do                - With do show, the show commands available in other modes can be executed");
                     println!("poweroff          - Power off the system");
                     println!("interface         - Enter the Interface Configuration Mode");
-                    println!("bitd              - Enter the Built-In Testing and diagnostic Mode");
-                    println!("ptm               - Enter the Position and Time Management Mode");
-                    println!("rtxc              - Enter the Radio Transmission Control Mode");
-                    println!("infodist          - Enter the Information Distribution Mode");
-                    println!("sysmon            - Enter the System Monitoring Mode");
-                    println!("sdm               - Enter the Software and Database Management Mode");
-                    println!("high_availability - Enter the High Availability Configuration Mode");
                 }
                 else if matches!(context.current_mode, Mode::InterfaceMode) {
                     println!("exit              - Exit to config mode");
@@ -222,19 +211,23 @@ Two styles of help are provided:
                     println!("poweroff          - Power off the system");
                 }
                 else if matches!(context.current_mode, Mode::VlanMode) {
+                    println!("config            - Configure services");
+                    println!("enable            - Enable services");
                     println!("exit              - Exit to config mode");
                     println!("help              - Display available commands");
                     println!("reload            - Reload the system");
                     println!("clear             - Clear the terminal");
                     println!("do                - With do show, the show commands available in other modes can be executed");
                     println!("poweroff          - Power off the system");
-                    println!("Transfer_sw       - Stores a specific firmware version in a designated memory slot on the specified target device");
-                    println!("Update            - Installs the specified firmware version onto the requested target.");
-                    println!("Rollback          - Rolls back the device to the requested firmware version.");
-                    println!("Get_version       - Retrieves the firmware version for the specified target device");
-                    println!("Get_all_versions  - Returns detailed information about all stored firmware versions to the requester");
+                    println!("bridge_name       - Configures the name of a bridge");
+                    println!("vlan              - Assigns VLAN ID");
+                    println!("segment           - Configures VLAN segment ID");
+                    println!("add               - Assigns interfaces to the bridge or protocols to the interfaces ");
+                    println!("router            - Configures the name of a router");
                 }
                 else if matches!(context.current_mode, Mode::QosMode) {
+                    println!("config            - Configure services");
+                    println!("enable            - Enable services");
                     println!("exit                      - Exit to config mode");
                     println!("help                      - Display available commands");
                     println!("reload                    - Reload the system");
@@ -252,6 +245,8 @@ Two styles of help are provided:
                     println!("Enable_auto_diagnostics   - Turns automatic failure diagnostics on or off for CBIT failures.");
                 }
                 else if matches!(context.current_mode, Mode::DynamicRMode) {
+                    println!("config            - Configure services");
+                    println!("enable            - Enable services");
                     println!("exit                  - Exit to config mode");
                     println!("help                  - Display available commands");
                     println!("reload                - Reload the system");
@@ -274,6 +269,8 @@ Two styles of help are provided:
                     println!("Get_security_status   - Returns the status of integrity checks, including spoofing detection results.");
                 }
                 else if matches!(context.current_mode, Mode::PortSMode) {
+                    println!("config            - Configure services");
+                    println!("enable            - Enable services");
                     println!("exit                      - Exit to config mode");
                     println!("help                      - Display available commands");
                     println!("reload                    - Reload the system");
@@ -295,6 +292,8 @@ Two styles of help are provided:
                     println!("log_rf_activity           - Retrieves a log of recent RF mode changes and power adjustments.");
                 }
                 else if matches!(context.current_mode, Mode::MonitoringMode) {
+                    println!("config            - Configure services");
+                    println!("enable            - Enable services");
                     println!("exit                  - Exit to config mode");
                     println!("help                  - Display available commands");
                     println!("reload                - Reload the system");
@@ -315,6 +314,8 @@ Two styles of help are provided:
                     
                 }
                 else if matches!(context.current_mode, Mode::AutoDMode) {
+                    println!("config            - Configure services");
+                    println!("enable            - Enable services");
                     println!("exit                      - Exit to config mode");
                     println!("help                      - Display available commands");
                     println!("reload                    - Reload the system");

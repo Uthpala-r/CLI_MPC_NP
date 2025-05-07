@@ -138,7 +138,13 @@ secret
 network_manager"#);
                         } else if matches!(context.current_mode, Mode::VlanMode){
                             //println!("Possible Completions");
-                            println!(r#"vlan_manager"#);
+                            println!(r#"vlan_manager
+bridge
+router
+protocol
+id
+vlan_tagging
+vlan_routing"#);
                         }
                         else if matches!(context.current_mode, Mode::QosMode){
                             //println!("Possible Completions");
@@ -280,6 +286,20 @@ coredump_login"#);
                                     }
                                 }
                             },
+                            "enable" => match subcommand {
+                                "bridge" | "router" => println!("<name>         - Define the specified name"),
+                                "protocol" => println!("<protocol>         - Define the protocol name"),
+                                "id" => println!("<Id>         - Define the ID"),
+                                "password" | "secret" => println!("<password|secret>         - Define the password or secret"),
+                                "vlan_routing" => println!("id"),
+                                "qos_manager" | "dynamic_routing_manager" => println!("id"),
+                                _ => if let Some(suggestions) = &cmd.suggestions2 {
+                                    println!("Possible completions:");
+                                    for suggestion in suggestions {
+                                        println!("  {}", suggestion);
+                                    }
+                                }
+                            },
                             "clock" => match subcommand {
                                 "set" => {
                                     println!("Possible completions:");
@@ -289,6 +309,27 @@ coredump_login"#);
                                     println!("Possible completions:");
                                     for suggestion in suggestions {
                                         println!("  {}", suggestion);
+                                    }
+                                }
+                            },
+                            "interface" => {
+                                match context.current_mode {
+                                    Mode::QosMode => {
+                                        println!("Possible completions:");
+                                        println!("<cpq|beq>");
+                                    },
+                                    Mode::AutoDMode => {
+                                        println!("Possible completions:");
+                                        println!("<enable|disable>   - Specify the condition");
+                                        println!("mode");
+                                    },
+                                    _ => {
+                                        if let Some(suggestions) = &cmd.suggestions2 {
+                                            println!("Possible completions:");
+                                            for suggestion in suggestions {
+                                                println!("  {}", suggestion);
+                                            }
+                                        }
                                     }
                                 }
                             },
@@ -309,30 +350,7 @@ coredump_login"#);
                                     }
                                 }
                             },
-                            "ntp" => match subcommand {
-                                "source" => {
-                                    println!("Possible completions:");
-                                    println!("<interface_name>  - Set source interface for NTP packets");
-                                },
-                                "server" => {
-                                    println!("Possible completions:");
-                                    println!("<ip-address>      - Configure NTP server with IPv4 address");
-                                },
-                                "authentication-key" => {
-                                    println!("Possible completions:");
-                                    println!("<key-number>      - Configure key number (1-65535)");
-                                },
-                                "trusted-key" => {
-                                    println!("Possible completions:");
-                                    println!("<key-number>      - Trusted authentication key number");
-                                },
-                                _ => if let Some(suggestions) = &cmd.suggestions2 {
-                                    println!("Possible completions:");
-                                    for suggestion in suggestions {
-                                        println!("  {}", suggestion);
-                                    }
-                                }
-                            },
+                            
                             _ => if let Some(suggestions) = &cmd.suggestions2 {
                                 println!("Possible completions:");
                                 for suggestion in suggestions {
@@ -372,15 +390,7 @@ coredump_login"#);
             let subcommand = parts[1];
             let param1 = parts[2];
 
-            if command_name == "ntp" {
-                match subcommand {
-                    "authentication-key" => {
-                        println!("Possible completions:");
-                        println!("md5              - Keyed Message Digest 5 algorithm");
-                    },
-                    _ => println!("No additional parameters available")
-                }
-            } else if command_name == "show" {
+            if command_name == "show" {
                 if subcommand == "ip" {    
                     match param1 {
                         "interface" => {
@@ -395,6 +405,36 @@ coredump_login"#);
                 if subcommand == "set" {    
                     println!("Possible completions:");
                     println!("<day>      - Enter the day '1-31'");
+                }
+            }
+            else if command_name == "interface"{
+                if param1 == "mode" {    
+                    println!("Possible completions:");
+                    println!("<mode>      - Specify the mode");
+                } else if param1 == "cpq" || param1 == "beq" {    
+                    println!("Possible completions:");
+                    println!("<true|false>      - Specify the condition");
+                }
+            }
+            else if command_name == "priority"{
+                if subcommand == "level" {    
+                    println!("interface");
+                }
+            }
+            else if command_name == "enable"{
+                if param1 == "id" {    
+                    println!("<ID>          - Define the ID");
+                } else if subcommand == "router" {    
+                    println!("id");
+                } else if subcommand == "protocol" {    
+                    println!("router");
+                }
+            }
+            else if command_name == "add"{
+                if subcommand == "bridge" {    
+                    println!("interface");
+                } else if subcommand == "interface" {    
+                    println!("protocol");
                 }
             }
             else if command_name == "ip"{
@@ -488,9 +528,71 @@ coredump_login"#);
                     _ => println!("No additional parameters available")
                 }
             } 
+            else if command_name == "priority"{
+                match subcommand  {  
+                    "level" => {  
+                        println!("Possible completions:");
+                        println!("<interface>    - Enter the interface name");
+                    },
+                    _ => println!("No additional parameters available")
+                }
+            } 
+            else if command_name == "enable"{
+                match subcommand  {  
+                    "router" => {  
+                        println!("Possible completions:");
+                        println!("<ID>    - Enter the ID");
+                    },
+                    "protocol" => {  
+                        println!("Possible completions:");
+                        println!("<name>    - Define the router name");
+                    },
+                    _ => println!("No additional parameters available")
+                }
+            } 
+            else if command_name == "add"{
+                match subcommand  {  
+                    "bridge" => {  
+                        println!("Possible completions:");
+                        println!("<interface_name>    - Define the interface name");
+                    },
+                    "interface" => {  
+                        println!("Possible completions:");
+                        println!("<protocol>    - Define the protocol");
+                    },
+                    _ => println!("No additional parameters available")
+                }
+            }
             else {
                 println!("No additional parameters available");
             }
+        },
+        5 => {
+            let command_name = parts[0];
+            let subcommand = parts[1];
+
+            if command_name == "add"{
+                match subcommand  {  
+                    "interface" => {  
+                        println!("router");
+                    },
+                    _ => println!("No additional parameters available")
+                }
+            } 
+        },
+        6 => {
+            let command_name = parts[0];
+            let subcommand = parts[1];
+
+            if command_name == "add"{
+                match subcommand  {  
+                    "interface" => {  
+                        println!("Possible completions:");
+                        println!("<router_name>    - Define the router name");
+                    },
+                    _ => println!("No additional parameters available")
+                }
+            } 
         },
         _ => {
             // Full command with ? (e.g., "configure terminal ?")
@@ -608,9 +710,7 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                     cmd == "help" ||
                     cmd == "write" ||
                     cmd == "service" ||
-                    cmd == "set" ||
                     cmd == "ifconfig" ||  
-                    cmd == "ntp" ||
                     cmd == "no" || 
                     cmd == "reload" ||
                     cmd == "poweroff" ||
@@ -619,13 +719,6 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                     cmd == "traceroute" ||
                     cmd == "interface" ||
                     cmd == "ip" ||
-                    cmd == "sdm" ||
-                    cmd == "bitd" ||
-                    cmd == "ptm" ||
-                    cmd == "rtxc" ||
-                    cmd == "infodist" ||
-                    cmd == "sysmon" ||
-                    cmd == "high_availability" ||
                     cmd == "dhcp_enable" ||
                     cmd == "do"
                 })
@@ -663,11 +756,11 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                     cmd == "reload" ||
                     cmd == "poweroff" ||
                     cmd == "do" ||
-                    cmd == "Transfer_sw" ||
-                    cmd == "Update" ||
-                    cmd == "Rollback" ||
-                    cmd == "Get_version" ||
-                    cmd == "Get_all_versions"
+                    cmd == "bridge_name" ||
+                    cmd == "vlan" ||
+                    cmd == "segment" ||
+                    cmd == "add" ||
+                    cmd == "router" 
                 })
                 .copied()
                 .collect()
@@ -684,15 +777,9 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                     cmd == "reload" ||
                     cmd == "poweroff" ||
                     cmd == "do" ||
-                    cmd == "Initiate" ||
-                    cmd == "Get_logs" ||
-                    cmd == "Get_status" ||
-                    cmd == "Clear_logs" ||
-                    cmd == "Set_threshold" ||
-                    cmd == "List_failures" ||
-                    cmd == "Get_diagnostics" ||
-                    cmd == "Run_health_check" ||
-                    cmd == "Enable_auto_diagnostics" 
+                    cmd == "policy" ||
+                    cmd == "interface" ||
+                    cmd == "priority" 
                 })
                 .copied()
                 .collect()
@@ -729,19 +816,9 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                     cmd == "reload" ||
                     cmd == "poweroff" ||
                     cmd == "do" ||
-                    cmd == "emcon" ||
-                    cmd == "rf_mode" ||
-                    cmd == "get_rf_status" ||
-                    cmd == "set_power_level" ||
-                    cmd == "get_power_level" ||
-                    cmd == "lock_rf_config" ||
-                    cmd == "unlock_rf_config" ||
-                    cmd == "force_tx_enable" ||
-                    cmd == "reset_rf_settings" ||
-                    cmd == "set_emcon_timer" ||
-                    cmd == "get_emcon_status" ||
-                    cmd == "enable_rx_only_override" ||
-                    cmd == "log_rf_activity" 
+                    cmd == "mode" ||
+                    cmd == "max_devices" ||
+                    cmd == "violation_status" 
                 })
                 .copied()
                 .collect()
@@ -775,25 +852,9 @@ pub fn get_mode_commands<'a>(commands: &'a HashMap<&str, Command>, mode: &Mode) 
                     cmd == "reload" ||
                     cmd == "poweroff" ||
                     cmd == "do" ||
-                    cmd == "set_syslog_server" ||
-                    cmd == "enable_syslog " ||
-                    cmd == "disable_syslog" ||
-                    cmd == "test_syslog" ||
-                    cmd == "show_syslog_status" ||
-                    cmd == "show_log" ||
-                    cmd == "set_alert" ||
-                    cmd == "get_alerts" ||
-                    cmd == "snmpget" ||
-                    cmd == "snmptrap" ||
-                    cmd == "activate_battleshort" ||
-                    cmd == "deactivate_battleshort" ||
-                    cmd == "battleshort_status" ||
-                    cmd == "remote_exclusive_access" ||
-                    cmd == "release_remote_access" ||
-                    cmd == "show_remote_access_status" ||
-                    cmd == "show_error_log" ||
-                    cmd == "clear_ui_display" ||
-                    cmd == "test_ui_alert" 
+                    cmd == "holdtime" ||
+                    cmd == "interface" ||
+                    cmd == "reinit" 
                 })
                 .copied()
                 .collect()

@@ -14,9 +14,8 @@ use crate::cliconfig::CliContext;
 use crate::execute::Mode;
 use crate::clock_settings::{handle_clock_set, parse_clock_set_input};
 use crate::network_config::{terminate_ssh_session, get_available_int, ip_with_cidr, get_system_interfaces, connect_via_ssh, execute_spawn_process, STATUS_MAP, IP_ADDRESS_STATE,  SELECTED_INTERFACE, ROUTE_TABLE};
-use crate::network_config::NtpAssociation;
 use crate::passwd::{PASSWORD_STORAGE, set_enable_password, set_enable_secret, get_enable_password, get_enable_secret, encrypt_password};
-use crate::show_c::{show_clock, show_uptime, show_version, show_sessions, show_controllers, show_history, show_run_conf, show_start_conf, show_interfaces, show_ip_int_br, show_ip_int_sp, show_ip_route, show_login, show_ntp, show_ntp_asso, show_proc, show_arp};
+use crate::show_c::{show_clock, show_uptime, show_version, show_sessions, show_controllers, show_history, show_run_conf, show_start_conf, show_interfaces, show_ip_int_br, show_ip_int_sp, show_ip_route, show_login, show_proc, show_arp};
 
 /// Builds and returns a `HashMap` of available commands, each represented by a `Command` structure.
 /// 
@@ -36,7 +35,12 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
     commands.insert("enable", Command {
         name: "enable",
         description: "Enter privileged EXEC mode",
-        suggestions: Some(vec!["password", "secret", "network_manager", "vlan_manager", "qos_manager", "dynamic_routing_manager", "port_security_manager", "monitoring_manager", "auto_discovery_manager", "ospf", "ospf_controller", "rip", "rip_controller", "coredump_login"]),
+        suggestions: Some(vec!["password", "secret", 
+        "network_manager", "vlan_manager", "qos_manager", "dynamic_routing_manager", "port_security_manager", "monitoring_manager", "auto_discovery_manager", 
+        "ospf", "ospf_controller", "rip", "rip_controller", 
+        "coredump_login",
+        "bridge", "router", "protocol", "id", "vlan_tagging", "vlan_routing",
+        "qos_config"]),
         suggestions1: None,
         suggestions2: None,
         options: None,
@@ -173,24 +177,29 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                     },
                     "qos_manager" => {
                         if matches!(context.current_mode, Mode::QosMode) {
-                            println!("QOS Manager is enabled.");
-                            //Back-end implementation
-                            //NetworkingManager.QosManager.enabled=true 
-                            Ok(())
+                            if args.len() == 2 {  
+                                let id = args[2];     
+                                println!("QOS Manager for the id {} is enabled.", id);
+                                //Back-end implementation
+                                //NetworkingManager.QosManager.enabled=true 
+                                Ok(())
+                            } else{
+                                Err("Correct usage: 'enable qos_manager id <ID>'".into())
+                            }
                         } else {
                             Err("The 'enable qos_manager' command is only available in QOS Manager mode.".into())
                         }
                     },
                     "dynamic_routing_manager" => {
                         if matches!(context.current_mode, Mode::DynamicRMode) {
-                            if args.len() == 2 {  
-                                let id = args[1];  
+                            if args.len() == 3 {  
+                                let id = args[2];  
                                 println!("Dynamic Routing Manager for the id {} is enabled.", id);
                                 //Back-end implementation
                                 //NetworkingManager.DynamicRoutingManager[id=2].enabled=true 
                                 Ok(())
                             } else{
-                                Err("Correct usage: 'enable dynamic_routing_manager <ID>'".into())
+                                Err("Correct usage: 'enable dynamic_routing_manager id <ID>'".into())
                             }
                         } else {
                             Err("The 'enable dynamic_routing_manager <ID>' command is only available in Dynamic Routing Manager mode.".into())
@@ -274,6 +283,114 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                             Ok(())
                         } else {
                             Err("The 'enable coredump_login' command is only available in Monitoring Manager mode.".into())
+                        }
+                    },
+                    "bridge" => {
+                        if matches!(context.current_mode, Mode::VlanMode) {
+                            if args.len() == 2 {
+                                let name = args[1];
+                                println!("Enables the bridge {}", name);
+                                //Back-end implementation
+                                //NetworkingManager.VlanManager.bridge[bridge1].enabled= true 
+                                Ok(())
+                            }
+                            else {
+                                Err("The correct usage : 'enable bridge <bridge_name>'".into())
+                            }                            
+                        } else {
+                            Err("The 'enable bridge <bridge_name>' command is only available in VLAN Manager mode.".into())
+                        }
+                    },
+                    "router" => {
+                        if matches!(context.current_mode, Mode::VlanMode) {
+                            if args.len() == 2 {
+                                let name = args[1];
+                                println!("Enables the router {}", name);
+                                //Back-end implementation
+                                //NetworkingManager.VlanManager.router[router1].enabled= true 
+                                Ok(())
+                            } else if args.len() == 4 && args[2] == "id" {
+                                let name = args[1];
+                                let id = args[3];
+                                println!("Enables the router {} for the id {}", name, id);
+                                //Back-end implementation
+                                //NetworkingManager.VlanManager.router[router1].id= 2 
+                                Ok(())
+                            }
+                            else {
+                                Err("The correct usage : 'enable router <router_name>' or 'enable router <router_name> id <ID>'".into())
+                            }
+                        } else {
+                            Err("The 'enable router <router_name>' command is only available in VLAN Manager mode.".into())
+                        }
+                    },
+                    "protocol" => {
+                        if matches!(context.current_mode, Mode::VlanMode) {
+                            if args.len() == 4 && args[2] == "router" {
+                                let protocol = args[1];
+                                let name = args[3];
+                                println!("Enables the router {} for the protocol {}", name, protocol);
+                                //Back-end implementation
+                                //NetworkingManager.VlanManager.router[router1].protocol[‘ospf].enabled = true
+                                Ok(())
+                            }
+                            else {
+                                Err("The correct usage : 'enable protocol <protocol> router <router_name>'".into())
+                            } 
+                        } else {
+                            Err("The 'enable protocol <protocol> router <router_name>' command is only available in VLAN Manager mode.".into())
+                        }
+                    },
+                    "id" => {
+                        if matches!(context.current_mode, Mode::VlanMode) {
+                            if args.len() == 2 {
+                                let id = args[1];
+                                println!("Enables the ID {}", id);
+                                //Back-end implementation
+                                //NetworkingManager.VlanManager.vlan[1].enabled= true  
+                                Ok(())
+                            }
+                            else {
+                                Err("The correct usage : 'enable id <ID>'".into())
+                            } 
+                        } else {
+                            Err("The 'enable id <ID>' command is only available in VLAN Manager mode.".into())
+                        }
+                    },
+                    "vlan_tagging" => {
+                        if matches!(context.current_mode, Mode::VlanMode) {
+                            println!("VLAN tagging enabled");
+                            //Back-end implementation
+                            //NetworkingManager.VlanManager.vlan[1].tagging.enabled=true 
+                            Ok(())
+                        } else {
+                            Err("The 'enable vlan_tagging' command is only available in VLAN Manager mode.".into())
+                        }
+                    },
+                    "vlan_routing" => {
+                        if matches!(context.current_mode, Mode::VlanMode) {
+                            if args.len() == 3 && args[1] == "id" {
+                                let id = args[2];
+                                println!("Enables the ID {}", id);
+                                //Back-end implementation
+                                //NetworkingManager.VlanManager.vlan[1].routing.enabled=true  
+                                Ok(())
+                            }
+                            else {
+                                Err("The correct usage : 'enable vlan_routing id <ID>'".into())
+                            }
+                        } else {
+                            Err("The 'enable vlan_routing id <ID>' command is only available in VLAN Manager mode.".into())
+                        }
+                    },
+                    "qos_config" => {
+                        if matches!(context.current_mode, Mode::QosMode) {
+                            println!("QOS config is enabled");
+                            //Back-end implementation
+                            //NetworkingManager.QosManager.QosConfiguration.enabled=true 
+                            Ok(())
+                        } else {
+                            Err("The 'enable qos_config' command is only available in QOS Manager mode.".into())
                         }
                     },
                     _=> Err(format!("Unknown enable subcommand: {}", args[0]).into())
@@ -362,7 +479,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         description: "Enter Interface configuration mode",
         suggestions: None,
         suggestions1: None,
-        suggestions2: None,
+        suggestions2: Some(vec!["mode", "<enable|disable>", "<cpq|beq>"]),
         options: Some(vec!["<interface-name>    - Specify a valid interface name"]),
         execute: |args, context, _| {
             if matches!(context.current_mode, Mode::ConfigMode | Mode::InterfaceMode) {
@@ -396,8 +513,80 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                 } else {
                     Err(format!("Invalid number of arguments. Usage: interface <interface-name>").into())
                 }
-            } else {
-                Err("The 'interface' command is only available in Global Configuration mode and interface configuration mode.".into())
+            } else if matches!(context.current_mode, Mode::AutoDMode) {
+                
+                let (interface_list, interfaces_list) = match get_available_int() {
+                    Ok(list) => list,
+                    Err(e) => return Err(e),
+                };
+                
+                //let args: Vec<String> = std::env::args().skip(1).collect();
+                if args.is_empty() {
+                    return Err(format!("Please specify a valid interface. Available interfaces: {}", interfaces_list));
+                }
+    
+                if args.len() == 2 {
+                    let net_interface = &args[0];
+                    if interface_list.iter().any(|i| i == net_interface) {
+                        let status = args[1];
+                        println!("Auto discovery {} for the interface {}", status, net_interface);
+                        //NetworkingManager.AutoDiscoveryManager.interface[eth0]=false
+                        Ok(())
+                    } else {
+                        Err(format!("Invalid interface: {}. Available interfaces: {}", net_interface, interfaces_list))
+                    }
+                } else if args.len() == 3 && args[1] == "mode" {
+                    let net_interface = &args[0];
+                    if interface_list.iter().any(|i| i == net_interface) {
+                        let mode = args[2];
+                        println!("Configure the mode {} for the interface {}", mode, net_interface);
+                        //NetworkingManager.AutoDiscoveryManager.mode.interface[eth1]=transmit-only
+                        Ok(())
+                    } else {
+                        Err(format!("Invalid interface: {}. Available interfaces: {}", net_interface, interfaces_list))
+                    }
+                } 
+                else {
+                    Err(format!("Invalid number of arguments.").into())
+                }
+            }
+            else if matches!(context.current_mode, Mode::QosMode) {
+                
+                let (interface_list, interfaces_list) = match get_available_int() {
+                    Ok(list) => list,
+                    Err(e) => return Err(e),
+                };
+                
+                //let args: Vec<String> = std::env::args().skip(1).collect();
+                if args.is_empty() {
+                    return Err(format!("Please specify a valid interface. Available interfaces: {}", interfaces_list));
+                }
+    
+                if args.len() == 3 && (args[1] == "beq" || args[1] == "cpq") {
+                    let net_interface = &args[0];
+                    if interface_list.iter().any(|i| i == net_interface) {
+                        if args[2] == "true" {
+                            println!("Enables {} for the interface {}", args[1], net_interface);
+                            //NetworkingManager.QosManager.QosConfiguration.interface[eth0].beq=true 
+                            Ok(())
+                        } else if args[2] == "false" {
+                            println!("Disables {} for the interface {}", args[1], net_interface);
+                            //NetworkingManager.QosManager.QosConfiguration.interface[eth0].beq=false
+                            Ok(())
+                        } else {
+                            Err("Specify the condition as true or false. Command: 'interface <interface_name> [cpq|bed] [true|false]'".into())
+                        }
+                    } else {
+                        Err(format!("Invalid interface: {}. Available interfaces: {}", net_interface, interfaces_list))
+                    }
+                }  
+                else {
+                    Err(format!("Invalid number of arguments.").into())
+                }
+            }
+            
+            else {
+                Err("The 'interface' command is only available in Global Configuration, interface configuration mode and Auto Discovery Manager Mode.".into())
             }
         },
     });
@@ -813,7 +1002,6 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                 "running-config",
                 "startup-config",
                 "version",
-                "ntp",
                 "processes",
                 "clock",
                 "uptime",
@@ -912,22 +1100,8 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                         Some(&"login") if matches!(context.current_mode, Mode::PrivilegedMode) => {
                             show_login();
                             Ok(())
-                        },
-                        
-                        Some(&"ntp") if matches!(context.current_mode, Mode::PrivilegedMode) => {
-                            match args.get(1) {
-                                Some(&"associations") => {
-                                    show_ntp_asso(&context);
-                                    Ok(())
-                                },
-                                None => {
-                                    show_ntp(&context);
-                                    Ok(())
-                                },
-                                _ => Err("Invalid NTP subcommand. Use 'associations' or no subcommand".into())
-                            }
-                        },
-                        
+                        },                        
+                    
                         Some(&"processes") if matches!(context.current_mode, Mode::PrivilegedMode) => {
                             show_proc();
                             Ok(())
@@ -963,13 +1137,12 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         Command {
             name: "do",
             description: "Execute privileged EXEC commands from any configuration mode",
-            suggestions: Some(vec!["show", "copy", "clock", "debug", "undebug", "clear"]),
-            suggestions1: Some(vec!["show", "copy", "clock", "debug", "undebug", "clear"]),
+            suggestions: Some(vec!["show", "copy", "clock", "debug", "undebug"]),
+            suggestions1: Some(vec!["show", "copy", "clock", "debug", "undebug"]),
             suggestions2: Some(vec![
                 "running-config",
                 "startup-config",
                 "version",
-                "ntp",
                 "processes",
                 "clock",
                 "uptime",
@@ -1064,19 +1237,6 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                                 show_login();
                                 Ok(())
                             },
-                            Some(&"ntp") => {
-                                match show_args.get(1) {
-                                    Some(&"associations") => {
-                                        show_ntp_asso(&context);
-                                        Ok(())
-                                    },
-                                    None => {
-                                        show_ntp(&context);
-                                        Ok(())
-                                    },
-                                    _ => Err("Invalid NTP subcommand. Use 'associations' or no subcommand".into())
-                                }
-                            },
                             Some(&"processes") => {
                                 show_proc();
                                 Ok(())
@@ -1158,17 +1318,6 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                             Ok(())
                         } else {
                             Err("Invalid arguments provided to 'do undebug all'. This command does not accept additional arguments.".into())
-                        }
-        
-                    },
-                    Some(&"clear") => {
-                        if args.len() == 3 && args[1] == "ntp" && args[2] == "associations" {
-                            context.ntp_associations.clear();
-                            // Reinitialize associations for configured servers
-                            println!("NTP associations cleared and reinitialized.");
-                            Ok(())
-                        } else {
-                            Err("Invalid arguments provided to 'do clear ntp associations'. This command does not accept additional arguments.".into())
                         }
         
                     },
@@ -1835,9 +1984,259 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
 
     //VLAN Manager Mode commands
 
+    commands.insert("bridge_name", Command {
+        name: "bridge_name",
+        description: "Configures the name of a bridge ",
+        suggestions: None,
+        suggestions1: None,
+        suggestions2: None,
+        options: Some(vec!["<name>        - Define the bridge name"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::VlanMode) {
+                if args.len() == 1 {
+                    let name = args[0];
+                    //NetworkingManager.VlanManager.bridge.name=’bridge1’
+                    println!("Bridge name is set to {}", name);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'bridge_name' command. 'bridge_name <name>'".into())
+                }
+            } else {
+                Err("The 'bridge_name' command is only available in VLAN Manager Mode.".into())
+            }
+        },
+    });
+
+    commands.insert("add", Command {
+        name: "add bridge and interface",
+        description: "Adds the bridge and interface ",
+        suggestions: Some(vec!["bridge", "interface"]),
+        suggestions1: Some(vec!["bridge", "interface"]),
+        suggestions2: None,
+        options: Some(vec!["<name>        - Define the specified name"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::VlanMode) {
+                if args.len() == 4 && args[0] == "bridge" && args[2] == "interface"{
+                    let b_name = args[1];
+                    let i_name = args[3];
+                    //NetworkingManager.VlanManager.bridge[bridge1].interface[eth0].add=true
+                    println!("The bridge {} is added to the interface {}", b_name, i_name);
+                    Ok(())
+                } 
+                else if args.len() == 6 && args[0] == "interface" && args[2] == "protocol" && args[4] == "router" {
+                    let i_name = args[1];
+                    let protocol = args[3];
+                    let r_name = args[5];
+                    //NetworkingManager.VlanManager.router[router1].protocol[‘ospf].interface[eth1].add=true 
+                    println!("{} routing protocol is added to the interface {} and router {}", protocol, i_name, r_name);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'add' command.".into())
+                }
+            } else {
+                Err("The 'add' command is only available in VLAN Manager Mode.".into())
+            }
+        },
+    });
+
+    commands.insert("router", Command {
+        name: "router name",
+        description: "Configures the name of a router (router1)",
+        suggestions: Some(vec!["name"]),
+        suggestions1: Some(vec!["name"]),
+        suggestions2: None,
+        options: Some(vec!["<name>        - Define the router name"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::VlanMode) {
+                if args.len() == 2 {
+                    let name = args[1];
+                    //NetworkingManager.VlanManager.router.name=’router1’ 
+                    println!("Router name is set to {}", name);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'router' command. 'router name <name>'".into())
+                }
+            } else {
+                Err("The 'router name' command is only available in VLAN Manager Mode.".into())
+            }
+        },
+    });
+
+    commands.insert("segment", Command {
+        name: "segment id",
+        description: "Configures VLAN segment ID ",
+        suggestions: Some(vec!["id"]),
+        suggestions1: Some(vec!["id"]),
+        suggestions2: None,
+        options: Some(vec!["<ID>        - Define the ID"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::VlanMode) {
+                if args.len() == 2 {
+                    let id = args[1];
+                    //NetworkingManager.VlanManager.vlan.segment.id=1 
+                    println!("Segment ID is set to {}", id);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'segment id' command. 'segment id <ID>'".into())
+                }
+            } else {
+                Err("The 'segment id' command is only available in VLAN Manager Mode.".into())
+            }
+        },
+    });
+
+    commands.insert("vlan", Command {
+        name: "vlan id",
+        description: "Assigns VLAN ID",
+        suggestions: Some(vec!["id"]),
+        suggestions1: Some(vec!["id"]),
+        suggestions2: None,
+        options: Some(vec!["<ID>        - Define the ID"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::VlanMode) {
+                if args.len() == 2 {
+                    let id = args[1];
+                    //NetworkingManager.VlanManager.vlan[1].id= 2 
+                    println!("VLAN ID is set to {}", id);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'vlan id' command. 'vlan id <ID>'".into())
+                }
+            } else {
+                Err("The 'vlan id' command is only available in VLAN Manager Mode.".into())
+            }
+        },
+    });
+
     //QOS Manager Mode Commands
 
+    commands.insert("policy", Command {
+        name: "policy",
+        description: "Sets the QoS policy",
+        suggestions: None,
+        suggestions1: None,
+        suggestions2: None,
+        options: Some(vec!["<policy>        - Set the QOS policy"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::QosMode) {
+                if args.len() == 1 {
+                    let policy = args[0];
+                    //NetworkingManager.QosManager.QosConfiguration.policy=’equal-acrossinterfaces’
+                    println!("QOS policy is set to {}", policy);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'policy' command. 'policy <policy>'".into())
+                }
+            } else {
+                Err("The 'policy' command is only available in QOS Manager Mode.".into())
+            }
+        },
+    });
+
+    commands.insert("priority", Command {
+        name: "priority",
+        description: "Assigns priority level to an interface",
+        suggestions: Some(vec!["level"]),
+        suggestions1: Some(vec!["level"]),
+        suggestions2: None,
+        options: Some(vec!["<level>        - Set the priority level"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::QosMode) {
+                if args.len() == 4 && args[0] == "level" && args[2] == "interface" {
+                    let level = args[1];
+                    let interface = args[3];
+                    //NetworkingManager.QosManager.QosConfiguration.interface[eth0].priority[1]=true  
+                    println!("Priority level {} is set to the interface {}", level, interface);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'priority' command. 'priority level <level> interface <interface_name> '".into())
+                }
+            } else {
+                Err("The 'priority' command is only available in QOS Manager Mode.".into())
+            }
+        },
+    });
+
     //Port Security Manager Mode
+
+    commands.insert("mode", Command {
+        name: "mode",
+        description: "Sets the port security mode to static",
+        suggestions: None,
+        suggestions1: None,
+        suggestions2: None,
+        options: Some(vec!["<mode>        - Set the mode"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::PortSMode) {
+                if args.len() == 1 {
+                    let mode = args[0];
+                    //NetworkingManager.PortSecurityManager.mode=’static’ 
+                    println!("Port security mode set to {}", mode);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'mode' command. 'mode <mode>'".into())
+                }
+            } else {
+                Err("The 'mode' command is only available in Port Security Manager Mode.".into())
+            }
+        },
+    });
+
+    commands.insert("max_devices", Command {
+        name: "max_devices",
+        description: "Limits the maximum number of devices allowed per port to 2. ",
+        suggestions: None,
+        suggestions1: None,
+        suggestions2: None,
+        options: Some(vec!["<number>        - Set the maximum amount of number of devices"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::PortSMode) {
+                if args.len() == 1 {
+                    let number = args[0];
+                    //NetworkingManager.PortSecurityManager.static.MaxDevices= 2 
+                    println!("The maximum amount of devices set to {}", number);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'max_devices' command. 'max_devices <number>'".into())
+                }
+            } else {
+                Err("The 'max_devices' command is only available in Port Security Manager Mode.".into())
+            }
+        },
+    });
+
+    commands.insert("violation_status", Command {
+        name: "violation_status",
+        description: "Configures the violation mode to restrict, allowing monitoring and logging of security violations while restricting unauthorized devices.",
+        suggestions: None,
+        suggestions1: None,
+        suggestions2: None,
+        options: Some(vec!["<status>        - Set the status"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::PortSMode) {
+                if args.len() == 1 {
+                    let status = args[0];
+                    //NetworkingManager.PortSecurityManager.static.violation=’restrict’ 
+                    println!("The violation status is set to {}", status);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'violation_status' command. 'violation_status <status>'".into())
+                }
+            } else {
+                Err("The 'violation_status' command is only available in Port Security Manager Mode.".into())
+            }
+        },
+    });
 
     //Monitoring Manager Mode
 
@@ -1860,13 +2259,60 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                     Err("Invalid arguments for 'logging_level' command. 'logging_level <level>'".into())
                 }
             } else {
-                Err("The 'logging_level'' command is only available in Monitoring Manager Mode.".into())
+                Err("The 'logging_level' command is only available in Monitoring Manager Mode.".into())
             }
         },
     });
 
     //Auto Discovery Manager Mode
     
+    commands.insert("holdtime", Command {
+        name: "holdtime",
+        description: "Sets the hold time for discovery messages to the default value.",
+        suggestions: None,
+        suggestions1: None,
+        suggestions2: None,
+        options: Some(vec!["<time|default>        - Set the hold time in seconds"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::AutoDMode) {
+                if args.len() == 1 {
+                    let time = args[0];
+                    //NetworkingManager.AutoDiscoveryManager.holdtime=default 
+                    println!("Holt time set to {}s", time);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'holdtime' command. 'holdtime <time|default>'".into())
+                }
+            } else {
+                Err("The 'holdtime' command is only available in Auto Discovery Manager Mode.".into())
+            }
+        },
+    });
+
+    commands.insert("reinit", Command {
+        name: "Reinit",
+        description: "Sets the reinitialization behavior to the default setting. ",
+        suggestions: Some(vec!["behaviour"]),
+        suggestions1: Some(vec!["behaviour"]),
+        suggestions2: None,
+        options: Some(vec!["<behaviour>        - Define the reinitialization behaviour"]),
+        execute: |args, context, _| {
+            if matches!(context.current_mode, Mode::AutoDMode) {
+                if args.len() == 2 {
+                    let behaviour = args[1];
+                    //NetworkingManager.AutoDiscoveryManager.reinit=default   
+                    println!("Reinitialization behaviour set to {}", behaviour);
+                    Ok(())
+                } 
+                else {
+                    Err("Invalid arguments for 'reinit' command. 'reinit behaviour <behaviour>'".into())
+                }
+            } else {
+                Err("The 'reinit' command is only available in Auto Discovery Manager Mode.".into())
+            }
+        },
+    });
 
     commands
 }

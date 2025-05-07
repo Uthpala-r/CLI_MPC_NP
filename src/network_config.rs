@@ -51,22 +51,7 @@ pub fn get_system_interfaces(interface: Option<&str>) -> String {
     output_str
 }
 
-/// Represents the NTP (Network Time Protocol) association details for a device.
-/// 
-/// This structure holds information related to the NTP association, such as the server's
-/// address, reference clock, synchronization status, and time offset values.
-#[derive(Default, Clone)]
-pub struct NtpAssociation {
-    pub address: String,
-    pub ref_clock: String,
-    pub st: u8,
-    pub when: String,
-    pub poll: u8,
-    pub reach: u8,
-    pub delay: f64,
-    pub offset: f64,
-    pub disp: f64,
-}
+
 
 pub fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path> {

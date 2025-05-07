@@ -95,13 +95,6 @@ fn main() {
         config: CliConfig::default(),
         prompt: format!("{}>", CliConfig::default().hostname),
         selected_interface: None,
-        ntp_source_interface: None,
-        ntp_servers: HashSet::new(), 
-        ntp_associations: Vec::new(),
-        ntp_authentication_enabled: false,   
-        ntp_authentication_keys: HashMap::new(), 
-        ntp_trusted_keys: HashSet::new(),     
-        ntp_master: false,   
     };
 
     // Configure the Rustyline editor with history behavior

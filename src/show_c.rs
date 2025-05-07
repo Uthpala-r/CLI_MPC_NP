@@ -115,41 +115,6 @@ pub fn show_login() -> Result<(), String> {
     Ok(())
 }
 
-pub fn show_ntp_asso(context: &CliContext) -> Result<(), String>{
-    if context.ntp_associations.is_empty() {
-        println!("No NTP associations configured.");
-    } else {
-        println!("address         ref clock       st   when     poll    reach  delay          offset            disp");
-        for assoc in &context.ntp_associations {
-            println!(" ~{}       {}          {}   {}        {}      {}      {:.2}           {:.2}              {:.2}",
-                assoc.address, assoc.ref_clock, assoc.st, assoc.when, assoc.poll,
-                assoc.reach, assoc.delay, assoc.offset, assoc.disp);
-        }
-        println!(" * sys.peer, # selected, + candidate, - outlyer, x falseticker, ~ configured");
-    }
-    Ok(())
-}
-
-pub fn show_ntp(context: &CliContext) -> Result<(), String>{
-    println!("NTP Master: {}", if context.ntp_master { "Enabled" } else { "Disabled" });
-    println!("NTP Authentication: {}", if context.ntp_authentication_enabled { "Enabled" } else { "Disabled" });
-    
-    if !context.ntp_authentication_keys.is_empty() {
-        println!("NTP Authentication Keys:");
-        for (key_number, key) in &context.ntp_authentication_keys {
-            println!("Key {}: {}", key_number, key);
-        }
-    }
-    
-    if !context.ntp_trusted_keys.is_empty() {
-        println!("NTP Trusted Keys:");
-        for key_number in &context.ntp_trusted_keys {
-            println!("Trusted Key {}", key_number);
-        }
-    }
-
-    Ok(())
-}
 
 pub fn show_proc() -> Result<(), String> {
     //Triggers the system commands (eg. Top, lscpu) and display the output 

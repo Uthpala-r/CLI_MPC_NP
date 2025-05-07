@@ -197,7 +197,27 @@ impl Completer for CommandCompleter {
                             });
                         
                         }
-                    } else if parts[0] == "network" {
+                    } else if parts[0] == "interface" && parts[2].starts_with("m") {
+                        let show_options = vec!["mode"];
+                        for option in show_options {
+                            candidates.push(Pair {
+                                display: format!("{}", option),
+                                replacement: format!("{}", option),
+                            });
+                        
+                        }
+                    } else if parts[0] == "enable" && parts[2].starts_with("i") {
+                        let show_options = vec!["id"];
+                        for option in show_options {
+                            candidates.push(Pair {
+                                display: format!("{}", option),
+                                replacement: format!("{}", option),
+                            });
+                        
+                        }
+                    }
+                    
+                    else if parts[0] == "network" {
                         if parts[2].starts_with("i") {
                             let show_options = vec!["ip"];
                             for option in show_options {
@@ -218,6 +238,7 @@ impl Completer for CommandCompleter {
                             
                             }
                         }
+                        
                         if parts[2].starts_with("a") {
                             let show_options = vec!["area"];
                             for option in show_options {
@@ -244,6 +265,39 @@ impl Completer for CommandCompleter {
                 } else if parts.len() == 4 && parts[0] == "show" {
                     // Add show subcommands for UserMode as suggestions
                     let show_options = vec!["brief"];
+                    for option in show_options {
+                        candidates.push(Pair {
+                            display: format!("{}", option),
+                            replacement: format!("{}", option),
+                        });
+                    
+                    }
+                }
+                else if parts.len() == 4 && parts[0] == "priority" {
+                    // Add show subcommands for UserMode as suggestions
+                    let show_options = vec!["interface"];
+                    for option in show_options {
+                        candidates.push(Pair {
+                            display: format!("{}", option),
+                            replacement: format!("{}", option),
+                        });
+                    
+                    }
+                }
+                else if parts.len() == 4 && parts[0] == "add" && parts[3].starts_with("i"){
+                    // Add show subcommands for UserMode as suggestions
+                    let show_options = vec!["interface"];
+                    for option in show_options {
+                        candidates.push(Pair {
+                            display: format!("{}", option),
+                            replacement: format!("{}", option),
+                        });
+                    
+                    }
+                }
+                else if parts.len() == 4 && parts[0] == "add" && parts[3].starts_with("p"){
+                    // Add show subcommands for UserMode as suggestions
+                    let show_options = vec!["protocol"];
                     for option in show_options {
                         candidates.push(Pair {
                             display: format!("{}", option),
@@ -293,10 +347,42 @@ impl Completer for CommandCompleter {
                     
                     }
                 }
-                
+                else if parts.len() == 4 && parts[0] == "enable" && parts[3].starts_with("i"){
+                    // Add show subcommands for UserMode as suggestions
+                    let show_options = vec!["id"];
+                    for option in show_options {
+                        candidates.push(Pair {
+                            display: format!("{}", option),
+                            replacement: format!("{}", option),
+                        });
+                    
+                    }
+                }
+                else if parts.len() == 4 && parts[0] == "enable" && parts[3].starts_with("r"){
+                    // Add show subcommands for UserMode as suggestions
+                    let show_options = vec!["router"];
+                    for option in show_options {
+                        candidates.push(Pair {
+                            display: format!("{}", option),
+                            replacement: format!("{}", option),
+                        });
+                    
+                    }
+                }
                 else if parts.len() == 5 && parts[0] == "do" {
                     // Add show subcommands for UserMode as suggestions
                     let show_options = vec!["brief"];
+                    for option in show_options {
+                        candidates.push(Pair {
+                            display: format!("{}", option),
+                            replacement: format!("{}", option),
+                        });
+                    
+                    }
+                }
+                else if parts.len() == 6 && parts[0] == "add" {
+                    // Add show subcommands for UserMode as suggestions
+                    let show_options = vec!["router"];
                     for option in show_options {
                         candidates.push(Pair {
                             display: format!("{}", option),
@@ -367,12 +453,12 @@ fn is_command_allowed_in_mode(command: &String, mode: &Mode) -> bool {
         Mode::PrivilegedMode => matches!(command.as_str(), "config" | "do" | "ssh" | "disable" | "traceroute" | "connect" | "reload" | "poweroff" | "debug" | "undebug" | "exit" | "clear" | "help" | "write" | "copy" | "clock" | "dhcp_enable" | "ping" | "show" | "ifconfig" | "ip"),
         Mode::ConfigMode => matches!(command.as_str(), "config" | "enable" | "hostname" | "do" | "interface" | "connect" | "disable" | "traceroute" | "reload" | "poweroff" | "no" | "exit" | "clear" | "help" | "write" | "dhcp_enable" | "ping" | "enable" | "service" | "set" | "ifconfig" | "ntp" | "ip" | "sdm" |"bitd" | "ptm" | "rtxc" | "infodist" | "sysmon" | "high_availability"),
         Mode::InterfaceMode => matches!(command.as_str(), "exit" | "disable" | "do" | "reload" | "poweroff" | "shutdown" | "no" | "clear" | "help" | "write" | "interface" | "ip" ),
-        Mode::VlanMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "Transfer_sw" | "Update" | "Rollback" | "Get_version" | "Get_all_versions"), 
-        Mode::QosMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "Initiate" | "Get_logs" | "Get_status" | "Clear_logs" | "Set_threshold"| "List_failures"| "Get_diagnostics"| "Run_health_check"| "Enable_auto_diagnostics"),
+        Mode::VlanMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "bridge_name" | "vlan" | "segment" | "add" | "router" ), 
+        Mode::QosMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "policy" | "priority" | "interface" ),
         Mode::DynamicRMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "network" | "redistribute" | "valid" | "controller"),
-        Mode::PortSMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "emcon" | "rf_mode"  | "get_rf_status"  | "set_power_level"  | "get_power_level"  | "lock_rf_config"  | "unlock_rf_config"  | "force_tx_enable"  | "reset_rf_settings"  | "set_emcon_timer"  | "get_emcon_status" | "enable_rx_only_override"  | "log_rf_activity" ),
+        Mode::PortSMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "mode" | "violation_status"  | "max_devices" ),
         Mode::MonitoringMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "logging_level"),
-        Mode::AutoDMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" |"set_syslog_server" |"enable_syslog" |"disable_syslog" |"test_syslog" |"show_syslog_status" |"show_log" |"set_alert" |"get_alerts" |"snmpget" |"snmptrap"|"deactivate_battleshort" |"activate_battleshort" |"battleshort_status"|"release_remote_access"|"remote_exclusive_access" |"show_remote_access_status"|"show_error_log"|"clear_ui_display" |"test_ui_alert"),
+        Mode::AutoDMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" |"holdtime" |"reinit" |"interface"),
         
     }
 }
