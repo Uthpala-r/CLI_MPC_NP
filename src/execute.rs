@@ -9,6 +9,7 @@ pub struct Command {
     pub name: &'static str,
     pub description: &'static str,
     pub suggestions: Option<Vec<&'static str>>,
+    pub arg_suggest: Option<Vec<&'static str>>,
     pub suggestions1: Option<Vec<&'static str>>,
     pub suggestions2: Option<Vec<&'static str>>,
     pub options: Option<Vec<&'static str>>,
@@ -30,7 +31,7 @@ pub enum Mode {
 
 }
 
-pub fn execute_command(input: &str, commands: &HashMap<&str, Command>, context: &mut CliContext, clock: &mut Option<Clock>, completer: &mut CommandCompleter) {
+pub fn execute_command(input: &str, commands: &HashMap<&str, Command>, context: &mut CliContext, clock: &mut Option<Clock>, _completer: &mut CommandCompleter) {
     let mut normalized_input = input.trim();
     let showing_suggestions = normalized_input.ends_with('?');
     
@@ -47,8 +48,7 @@ pub fn execute_command(input: &str, commands: &HashMap<&str, Command>, context: 
         let cmd_key = parts[0];
         
         // Check if command exists in current mode
-        let allowed_commands_for_walkup = get_mode_commands(commands, &context.current_mode);
-        let cmd_in_current_mode = find_unique_command(cmd_key, &allowed_commands_for_walkup);
+        let cmd_in_current_mode = find_unique_command(cmd_key, &available_commands);
         
         if let Some(matched_cmd) = cmd_in_current_mode {
             execute_matched_command(matched_cmd, &parts, commands, context, clock);
@@ -610,36 +610,41 @@ fn execute_matched_command(matched_cmd: &str, parts: &[&str], commands: &HashMap
 }
 
 fn execute_command_with_args(cmd: &Command, parts: &[&str], context: &mut CliContext, clock: &mut Option<Clock>) {
-    if let Some(suggestions) = &cmd.suggestions1 {
+    let result = if let Some(suggestions) = &cmd.arg_suggest {
         match parts.len() {
             1 => {
-                println!("Incomplete command. Subcommand required.");
+                // If it's an abbreviated command like "en" for "enable"
+                if parts[0].starts_with("en") || parts[0].starts_with("int") || parts[0].starts_with("di"){
+                    // Directly execute the command with no args
+                    (cmd.execute)(&[], context, clock)
+                } else {
+                    println!("Incomplete command. Subcommand required.");
+                    Ok(())
+                }
             }
             2 => {
                 if suggestions.is_empty() {
-                    if let Err(err) = (cmd.execute)(&parts[1..], context, clock) {
-                        println!("Error: {}", err);
-                    }
+                    (cmd.execute)(&parts[1..], context, clock)
                 } else {
                     if let Some(matched_subcommand) = find_unique_subcommand(parts[1], suggestions) {
-                        if let Err(err) = (cmd.execute)(&[matched_subcommand], context, clock) {
-                            println!("Error: {}", err);
-                        }
+                        (cmd.execute)(&[matched_subcommand], context, clock)
                     } else {
                         println!("Ambiguous or invalid subcommand: {}", parts[1]);
+                        Ok(())
                     }
                 }
             }
             _ => {
-                if let Err(err) = (cmd.execute)(&parts[1..], context, clock) {
-                    println!("Error: {}", err);
-                }
+                (cmd.execute)(&parts[1..], context, clock)
             }
         }
     } else {
-        if let Err(err) = (cmd.execute)(&parts[1..], context, clock) {
-            println!("Error: {}", err);
-        }
+        (cmd.execute)(&parts[1..], context, clock)
+    };
+
+    // Handle errors from any of the command executions
+    if let Err(err) = result {
+        println!("Error: {}", err);
     }
 }
 

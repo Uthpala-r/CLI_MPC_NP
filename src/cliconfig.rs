@@ -1,23 +1,10 @@
 /// External crates for the CLI application
-use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use crate::execute::Mode;
 
 
 /// Represents the configuration for the CLI application.
-///
-/// This structure holds the following configuration details:
-/// - `running_config`: A map containing the currently active configuration settings.
-/// - `startup_config`: A map containing the startup configuration settings loaded at initialization.
-/// - `hostname`: The hostname of the system.
-/// etc.
-///
-/// # Examples
-/// ```
-/// let config = CliConfig::default();
-/// assert_eq!(config.hostname, "Network");
-/// ```
-/// 
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CliConfig {
     pub running_config: Option<String>,

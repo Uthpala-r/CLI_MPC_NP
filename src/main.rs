@@ -30,7 +30,7 @@ use crate::execute::Mode;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use rustyline::history::DefaultHistory;
-use std::collections::{HashSet, HashMap};
+use std::collections::HashMap;
 use ctrlc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -197,7 +197,7 @@ fn main() {
                     continue;
                 }
 
-                rl.add_history_entry(input);
+                let _ = rl.add_history_entry(input);
                 
                 if input == "exit cli" {
                     println!("Exiting CLI...");

@@ -406,52 +406,12 @@ impl Completer for CommandCompleter {
 
 
 /// Determines if a command is allowed in the current CLI mode.
-///
-/// This function checks whether a given command is valid and permitted for execution
-/// in the specified CLI mode. Each mode has a predefined set of commands that are allowed.
-///
-/// # Arguments
-/// - `command`: A reference to a `String` representing the command to check.
-/// - `mode`: A reference to the current `Mode` in which the CLI is operating.
-///
-/// # Returns
-/// - `true` if the command is allowed in the given mode.
-/// - `false` if the command is not allowed in the given mode.
-///
-/// # Supported Modes and Commands
-/// - **UserMode**: Basic commands like `enable`, `exit`, `help`, and `ping`.
-/// - **PrivilegedMode**: Advanced commands like `configure`, `write`, `copy`, `show`, and others.
-/// - **ConfigMode**: Configuration commands like `hostname`, `interface`, `ip`, and more.
-/// - **InterfaceMode**: Interface-specific commands like `shutdown`, `switchport`, `ip`, etc.
-/// - **VlanMode**: VLAN-specific commands like `name`, `state`, and `vlan`.
-/// - **RouterConfigMode**: Router configuration commands like `network`, `neighbor`, and `area`.
-/// - **ConfigStdNaclMode**: Standard ACL commands like `deny`, `permit`, and `ip`.
-/// - **ConfigExtNaclMode**: Extended ACL commands like `deny`, `permit`, and `ip`.
-///
-/// # Example
-/// ```rust
-/// let command = "enable".to_string();
-/// let mode = Mode::UserMode;
-///
-/// if is_command_allowed_in_mode(&command, &mode) {
-///     println!("Command '{}' is allowed in {:?} mode.", command, mode);
-/// } else {
-///     println!("Command '{}' is not allowed in {:?} mode.", command, mode);
-/// }
-/// ```
-///
-/// # Notes
-/// - Modes not explicitly defined in the match statement will return `false` for all commands.
-/// - The `Mode` enum may include additional modes that are not currently covered.
-///
-/// # Performance
-/// The function uses the `matches!` macro to provide concise and efficient pattern matching
-/// for the commands within each mode.
+
 fn is_command_allowed_in_mode(command: &String, mode: &Mode) -> bool {
     match mode {
         Mode::UserMode => matches!(command.as_str(), "enable" | "do" | "disable" | "traceroute" | "connect" | "reload" | "poweroff" | "exit" | "clear" | "help" | "show" | "dhcp_enable" | "ping" | "write" | "ifconfig" | "ip"),
         Mode::PrivilegedMode => matches!(command.as_str(), "config" | "do" | "ssh" | "disable" | "traceroute" | "connect" | "reload" | "poweroff" | "debug" | "undebug" | "exit" | "clear" | "help" | "write" | "copy" | "clock" | "dhcp_enable" | "ping" | "show" | "ifconfig" | "ip"),
-        Mode::ConfigMode => matches!(command.as_str(), "config" | "enable" | "hostname" | "do" | "interface" | "connect" | "disable" | "traceroute" | "reload" | "poweroff" | "no" | "exit" | "clear" | "help" | "write" | "dhcp_enable" | "ping" | "enable" | "service" | "set" | "ifconfig" | "ntp" | "ip" | "sdm" |"bitd" | "ptm" | "rtxc" | "infodist" | "sysmon" | "high_availability"),
+        Mode::ConfigMode => matches!(command.as_str(), "config" | "enable" | "hostname" | "do" | "interface" | "connect" | "disable" | "traceroute" | "reload" | "poweroff" | "no" | "exit" | "clear" | "help" | "write" | "dhcp_enable" | "ping" | "service" | "set" | "ifconfig" | "ntp" | "ip" | "sdm" |"bitd" | "ptm" | "rtxc" | "infodist" | "sysmon" | "high_availability"),
         Mode::InterfaceMode => matches!(command.as_str(), "exit" | "disable" | "do" | "reload" | "poweroff" | "shutdown" | "no" | "clear" | "help" | "write" | "interface" | "ip" ),
         Mode::VlanMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "bridge_name" | "vlan" | "segment" | "add" | "router" ), 
         Mode::QosMode => matches!(command.as_str(), "config" | "enable" | "disable" | "exit" | "do" | "reload" | "poweroff" | "clear" | "help" | "policy" | "priority" | "interface" ),
@@ -471,14 +431,6 @@ impl Helper for CommandCompleter {}
 impl Hinter for CommandCompleter {
     type Hint = String;
 
-    /// Provides hints for the current input line.
-    ///
-    /// # Arguments
-    /// - `_line`: The current input line from the user.
-    /// - `_pos`: The cursor position within the line.
-    /// - `_ctx`: The rustyline context.
-    ///
-    /// # Returns
     /// Always returns `None` in this implementation as hints are not used.
     fn hint(&self, _line: &str, _pos: usize, _ctx: &rustyline::Context<'_>) -> Option<String> {
         None 
@@ -492,13 +444,6 @@ impl Highlighter for CommandCompleter {}
 /// Implements the `Validator` trait for the `CommandCompleter` struct.
 impl Validator for CommandCompleter {
 
-    /// Validates the current input line.
-    ///
-    /// # Arguments
-    /// - `_ctx`: A mutable reference to the validation context.
-    ///
-    /// # Returns
-    /// Always returns `ValidationResult::Valid` in this implementation.
     fn validate(
         &self,
         _ctx: &mut ValidationContext<'_>,

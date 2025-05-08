@@ -28,14 +28,20 @@ pub fn show_version() {
 
 pub fn show_sessions() -> Result<(), String> {
     //Use 'w' command to access the system Telnet sessions
-    execute_spawn_process("sudo", &["w"]);
+    if let Err(e) = execute_spawn_process("sudo", &["w"]) {
+        eprintln!("Failed to execute the sessions: {}", e);
+    }
+    
     Ok(())
 }
 
 pub fn show_controllers() -> Result<(), String> {
     
     //Triggers the command ‘lspci’ or ‘sudo lshw -class network’ and extract the relevant details.
-    execute_spawn_process("sudo", &["lshw", "-class", "network"]);
+    if let Err(e) = execute_spawn_process("sudo", &["lshw", "-class", "network"]) {
+        eprintln!("Failed to show controllers: {}", e);
+    }
+    
     Ok(())
 }
 
@@ -87,13 +93,19 @@ pub fn show_start_conf(context: &CliContext) -> Result<(), String> {
 pub fn show_interfaces() -> Result<(), String> {
     
     //Use ls /sys/class/net command
-    execute_spawn_process("ls", &["/sys/class/net"]);
+    if let Err(e) = execute_spawn_process("ls", &["/sys/class/net"]) {
+        eprintln!("Failed to show interfaces: {}", e);
+    }
+    
     Ok(())
                     
 }
 
 pub fn show_ip_int_br() -> Result<(), String> {
-    execute_spawn_process("ip", &["a"]);
+    if let Err(e) = execute_spawn_process("ip", &["a"]) {
+        eprintln!("Failed to show interfaces in brief: {}", e);
+    }
+    
     Ok(())
 }
 
@@ -104,26 +116,37 @@ pub fn show_ip_int_sp(interface: &str) -> Result<(), String> {
 }
 
 pub fn show_ip_route() -> Result<(), String> {
-    execute_spawn_process("ip", &["route"]);
+    if let Err(e) = execute_spawn_process("ip", &["route"]) {
+        eprintln!("Failed to show ip routes: {}", e);
+    }
+    
     Ok(())
 }
 
 pub fn show_login() -> Result<(), String> {
     
     //Triggers the system ‘last’ and ‘faillog’ commands.
-    execute_spawn_process("sudo", &["last"]);
+    if let Err(e) = execute_spawn_process("sudo", &["last"]) {
+        eprintln!("Failed to show logins: {}", e);
+    }
+    
     Ok(())
 }
 
 
 pub fn show_proc() -> Result<(), String> {
     //Triggers the system commands (eg. Top, lscpu) and display the output 
-    execute_spawn_process("sudo", &["lscpu"]);
+    if let Err(e) = execute_spawn_process("sudo", &["lscpu"]) {
+        eprintln!("Failed to show processors: {}", e);
+    }
     Ok(()) 
 }
 
 pub fn show_arp() -> Result<(), String> {
     //Use 'w' command to access the system Telnet sessions
-    execute_spawn_process("ip", &["neigh"]);
+    if let Err(e) = execute_spawn_process("ip", &["neigh"]) {
+        eprintln!("Failed to show arp tables: {}", e);
+    }
+    
     Ok(())
 }

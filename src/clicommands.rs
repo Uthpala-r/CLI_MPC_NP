@@ -13,21 +13,12 @@ use crate::execute::Command;
 use crate::cliconfig::CliContext;
 use crate::execute::Mode;
 use crate::clock_settings::{handle_clock_set, parse_clock_set_input};
-use crate::network_config::{terminate_ssh_session, get_available_int, ip_with_cidr, get_system_interfaces, connect_via_ssh, execute_spawn_process, STATUS_MAP, IP_ADDRESS_STATE,  SELECTED_INTERFACE, ROUTE_TABLE};
+use crate::network_config::{terminate_ssh_session, get_available_int, ip_with_cidr, get_system_interfaces, connect_via_ssh, execute_spawn_process, IP_ADDRESS_STATE,  SELECTED_INTERFACE, ROUTE_TABLE};
 use crate::passwd::{PASSWORD_STORAGE, set_enable_password, set_enable_secret, get_enable_password, get_enable_secret, encrypt_password};
 use crate::show_c::{show_clock, show_uptime, show_version, show_sessions, show_controllers, show_history, show_run_conf, show_start_conf, show_interfaces, show_ip_int_br, show_ip_int_sp, show_ip_route, show_login, show_proc, show_arp};
 
 /// Builds and returns a `HashMap` of available commands, each represented by a `Command` structure.
-/// 
-/// This function initializes a registry of commands that can be executed in different modes
-/// (e.g., `UserMode`, `PrivilegedMode`, `ConfigMode`, etc.) within a router-like system.
-/// Each command is associated with a name, description, suggestions for usage, and an execution
-/// function that defines its behavior.
-///
-/// 
-/// # Returns
-/// A `HashMap` where the keys are command names (as `&'static str`) and the values are the corresponding `Command` structs.
-/// Each `Command` struct contains the `name`, `description`, `suggestions`, and an `execute` function.
+
 pub fn build_command_registry() -> HashMap<&'static str, Command> {
     let mut commands = HashMap::new();
 
@@ -36,6 +27,12 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "enable",
         description: "Enter privileged EXEC mode",
         suggestions: Some(vec!["password", "secret", 
+        "network_manager", "vlan_manager", "qos_manager", "dynamic_routing_manager", "port_security_manager", "monitoring_manager", "auto_discovery_manager", 
+        "ospf", "ospf_controller", "rip", "rip_controller", 
+        "coredump_login",
+        "bridge", "router", "protocol", "id", "vlan_tagging", "vlan_routing",
+        "qos_config"]),
+        arg_suggest: Some(vec!["password", "secret", 
         "network_manager", "vlan_manager", "qos_manager", "dynamic_routing_manager", "port_security_manager", "monitoring_manager", "auto_discovery_manager", 
         "ospf", "ospf_controller", "rip", "rip_controller", 
         "coredump_login",
@@ -404,6 +401,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "configure network_manager",
         description: "Enter global configuration mode",
         suggestions: Some(vec!["network_manager", "vlan", "qos", "dynrouter", "portsec", "mon", "autod", "ospf", "rip"]),
+        arg_suggest: Some(vec!["network_manager", "vlan", "qos", "dynrouter", "portsec", "mon", "autod", "ospf", "rip"]),
         suggestions1: None,
         suggestions2: None,
         options: None,
@@ -478,6 +476,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "interface",
         description: "Enter Interface configuration mode",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: Some(vec!["mode", "<enable|disable>", "<cpq|beq>"]),
         options: Some(vec!["<interface-name>    - Specify a valid interface name"]),
@@ -525,7 +524,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                     return Err(format!("Please specify a valid interface. Available interfaces: {}", interfaces_list));
                 }
     
-                if args.len() == 2 {
+                if args.len() == 2 && (args[1] == "enable" || args[1] == "disable"){
                     let net_interface = &args[0];
                     if interface_list.iter().any(|i| i == net_interface) {
                         let status = args[1];
@@ -597,6 +596,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "exit",
         description: "Exit the current mode and return to the previous mode.",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: None,
@@ -680,6 +680,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "disable",
         description: "Exit the Privileged EXEC mode and return to the USER EXEC mode.",
         suggestions: Some(vec!["network_manager", "vlan_manager", "qos_manager", "dynamic_routing_manager", "port_security_manager", "monitoring_manager", "auto_discovery_manager"]),
+        arg_suggest: Some(vec!["network_manager", "vlan_manager", "qos_manager", "dynamic_routing_manager", "port_security_manager", "monitoring_manager", "auto_discovery_manager"]),
         suggestions1: None,
         suggestions2: None,
         options: None,
@@ -795,6 +796,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "reload",
         description: "Reload the system",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: None,
@@ -806,8 +808,10 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             let reload_confirm = reload_confirm.trim();
     
             if ["yes", "y", ""].contains(&reload_confirm.to_ascii_lowercase().as_str()) {
-                  
-                execute_spawn_process("sudo", &["reboot"]);
+                if let Err(e) = execute_spawn_process("sudo", &["reboot"]) {
+                    eprintln!("Failed to reboot: {}", e);
+                }  
+                
                 Ok(())
                 
             } else if ["no", "n"].contains(&reload_confirm.to_ascii_lowercase().as_str()) {
@@ -824,6 +828,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "poweroff",
         description: "Shutdown the Management PC",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: None,
@@ -835,8 +840,11 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             let reload_confirm = reload_confirm.trim();
     
             if ["yes", "y", ""].contains(&reload_confirm.to_ascii_lowercase().as_str()) {
-                fs::remove_file("history.txt");  
-                execute_spawn_process("sudo", &["shutdown", "now"]);
+                let _ = fs::remove_file("history.txt");  
+                if let Err(e) = execute_spawn_process("sudo", &["shutdown", "now"]) {
+                    eprintln!("Failed to shutdown: {}", e);
+                }
+                
                 Ok(())
                 
             } else if ["no", "n"].contains(&reload_confirm.to_ascii_lowercase().as_str()) {
@@ -853,6 +861,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "debug all",
         description: "To turn on all the possible debug levels",
         suggestions: Some(vec!["all"]),
+        arg_suggest: Some(vec!["all"]),
         suggestions1: Some(vec!["all"]),
         suggestions2: None,
         options: None,
@@ -890,6 +899,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "undebug all",
         description: "Turning off all possible debugging processes",
         suggestions: Some(vec!["all"]),
+        arg_suggest: Some(vec!["all"]),
         suggestions1: Some(vec!["all"]),
         suggestions2: None,
         options: None,
@@ -912,6 +922,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "hostname",
         description: "Set the device hostname",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: Some(vec!["<new-hostname>    - Enter a new hostname"]),
@@ -957,6 +968,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             name: "ifconfig",
             description: "Configure a network interface",
             suggestions: None,
+            arg_suggest: None,
             suggestions1: None,
             suggestions2: None,
             options: Some(vec![
@@ -1013,6 +1025,21 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                 "login",
                 "arp"
             ]),
+            arg_suggest: Some(vec![
+                "running-config",
+                "startup-config",
+                "version",
+                "processes",
+                "clock",
+                "uptime",
+                "controllers",
+                "history",
+                "sessions",
+                "interfaces",
+                "ip",
+                "login",
+                "arp"
+            ]),
             suggestions1: None,
             suggestions2: Some(vec!["interface", "brief", "associations"]),
             options: None,
@@ -1033,32 +1060,32 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                         },
                         
                         Some(&"sessions") if matches!(context.current_mode, Mode::UserMode) => {
-                            show_sessions();
+                            let _ = show_sessions();
                             Ok(())
                         },
 
                         Some(&"controllers") if matches!(context.current_mode, Mode::UserMode) => {
                             
-                            show_controllers();  
+                            let _ = show_controllers();  
                             Ok(())
                         },
                         Some(&"history")  => {
-                            show_history();
+                            let _ = show_history();
                             Ok(())
                         },
                         
                         Some(&"running-config") if matches!(context.current_mode, Mode::PrivilegedMode) => {
-                            show_run_conf(&context);
+                            let _ = show_run_conf(&context);
                             Ok(())
                         },
 
                         Some(&"startup-config") if matches!(context.current_mode, Mode::PrivilegedMode) => {
-                            show_start_conf(&context);
+                            let _ = show_start_conf(&context);
                             Ok(())
                         },
 
                         Some(&"interfaces") if matches!(context.current_mode, Mode::PrivilegedMode) => {
-                            show_interfaces();
+                            let _ = show_interfaces();
                             Ok(())
                         },
 
@@ -1067,7 +1094,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                                 Some(&"interface") => {
                                     match args.get(2) {
                                         Some(&"brief") => {
-                                            show_ip_int_br();
+                                            let _ = show_ip_int_br();
                                             Ok(())
                                         },
                                         Some(&interface) => {
@@ -1075,7 +1102,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                                             match get_available_int() {
                                                 Ok((interface_list, _)) => {
                                                     if interface_list.iter().any(|i| i == interface) {
-                                                        show_ip_int_sp(interface)?;
+                                                        let _ = show_ip_int_sp(interface)?;
                                                         Ok(())
                                                     } else {
                                                         Err(format!("Interface '{}' not found. Available interfaces: {}", 
@@ -1090,7 +1117,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                                     }
                                 }
                                 Some(&"route") => {
-                                    show_ip_route();
+                                    let _ = show_ip_route();
                                     Ok(())
                                 }
                                 _ => Err("Invalid IP subcommand. Use 'interface brief'".into())
@@ -1098,18 +1125,18 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                         },
 
                         Some(&"login") if matches!(context.current_mode, Mode::PrivilegedMode) => {
-                            show_login();
+                            let _ = show_login();
                             Ok(())
                         },                        
                     
                         Some(&"processes") if matches!(context.current_mode, Mode::PrivilegedMode) => {
-                            show_proc();
+                            let _ = show_proc();
                             Ok(())
                             
                             
                         },
                         Some(&"arp") => {
-                            show_arp();
+                            let _ = show_arp();
                             Ok(())    
                         },
                         
@@ -1138,6 +1165,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             name: "do",
             description: "Execute privileged EXEC commands from any configuration mode",
             suggestions: Some(vec!["show", "copy", "clock", "debug", "undebug"]),
+            arg_suggest: Some(vec!["show", "copy", "clock", "debug", "undebug"]),
             suggestions1: Some(vec!["show", "copy", "clock", "debug", "undebug"]),
             suggestions2: Some(vec![
                 "running-config",
@@ -1176,27 +1204,27 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                                 Ok(())
                             },
                             Some(&"sessions") => {
-                                show_sessions();
+                                let _ = show_sessions();
                                 Ok(())
                             },
                             Some(&"controllers") => {
-                                show_controllers();                                
+                                let _ = show_controllers();                                
                                 Ok(())
                             },
                             Some(&"history") => {
-                                show_history();
+                                let _ = show_history();
                                 Ok(())
                             },
                             Some(&"running-config") => {
-                                show_run_conf(&context);
+                                let _ = show_run_conf(&context);
                                 Ok(())
                             },
                             Some(&"startup-config") => {
-                                show_start_conf(&context);
+                                let _ = show_start_conf(&context);
                                 Ok(())
                             },
                             Some(&"interfaces") => {
-                                show_interfaces();
+                                let _ = show_interfaces();
                                 Ok(())
                             },
                             Some(&"ip") => {
@@ -1204,7 +1232,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                                     Some(&"interface") => {
                                         match args.get(3) {
                                             Some(&"brief") => {
-                                                show_ip_int_br();
+                                                let _ = show_ip_int_br();
                                                 Ok(())
                                             },
                                             Some(&interface) => {
@@ -1212,7 +1240,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                                                 match get_available_int() {
                                                     Ok((interface_list, _)) => {
                                                         if interface_list.iter().any(|i| i == interface) {
-                                                            show_ip_int_sp(interface)?;
+                                                            let _ = show_ip_int_sp(interface)?;
                                                             Ok(())
                                                         } else {
                                                             Err(format!("Interface '{}' not found. Available interfaces: {}", 
@@ -1227,22 +1255,22 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                                         }
                                     }
                                     Some(&"route") => {
-                                        show_ip_route();
+                                        let _ = show_ip_route();
                                         Ok(())
                                     }
                                     _ => Err("Invalid IP subcommand. Use 'interface brief'".into())
                                 }
                             },
                             Some(&"login") => {
-                                show_login();
+                                let _ = show_login();
                                 Ok(())
                             },
                             Some(&"processes") => {
-                                show_proc();
+                                let _ = show_proc();
                                 Ok(())
                             },
                             Some(&"arp") => {
-                                show_arp();
+                                let _ = show_arp();
                                 Ok(())
                             },
                             
@@ -1276,7 +1304,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                                 match parse_clock_set_input(&input) {
                                     Ok((time, day, month, year)) => {
                             
-                                        handle_clock_set(time, day, month, year, clock);
+                                        let _ = handle_clock_set(time, day, month, year, clock);
                                         Ok(())
                                     }
                                     Err(err) => Err(err), 
@@ -1343,13 +1371,14 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             name: "write memory",
             description: "Save the running configuration to the startup configuration",
             suggestions: Some(vec!["memory"]),
+            arg_suggest: Some(vec!["memory"]),
             suggestions1: Some(vec!["memory"]),
             suggestions2: None,
             options: None,
             execute: |args, context, _| {
                 if matches!(context.current_mode, Mode::UserMode | Mode::PrivilegedMode | Mode::ConfigMode) {
                     if args.len() == 1 && args[0] == "memory" {
-                        save_running_to_startup(context);
+                        let _ = save_running_to_startup(context);
                         Ok(())
                     
                     } else {
@@ -1369,6 +1398,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             name: "copy",
             description: "Copy running configuration",
             suggestions: Some(vec!["running-config"]),
+            arg_suggest: Some(vec!["running-config"]),
             suggestions1: Some(vec!["running-config"]),
             suggestions2: Some(vec!["startup-config"]),
             options: Some(vec!["<file_name>     - Enter the file name or 'startup-config'",
@@ -1398,6 +1428,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             name: "help",
             description: "Display available commands for current mode",
             suggestions: None,
+            arg_suggest: None,
             suggestions1: None,
             suggestions2: None,
             options: None,
@@ -1415,6 +1446,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             name: "ip",
             description: "Define all the ip commands",
             suggestions: Some(vec!["address", "route"]),
+            arg_suggest: Some(vec!["address", "route"]),
             suggestions1: Some(vec!["address", "route"]),
             suggestions2: None,
             options: Some(vec![
@@ -1530,6 +1562,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             name: "shutdown",
             description: "Disable the selected network interface.",
             suggestions: None,
+            arg_suggest: None,
             suggestions1: None,
             suggestions2: None,
             options: None,
@@ -1557,6 +1590,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             name: "no",
             description: "Enable the selected network interface.",
             suggestions: Some(vec!["shutdown", "ip"]),
+            arg_suggest: Some(vec!["shutdown", "ip"]),
             suggestions1: Some(vec!["shutdown", "ip"]),
             suggestions2: Some(vec!["route"]),
             options: None,
@@ -1651,11 +1685,12 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
     commands.insert("clear", Command {
         name: "clear",
         description: "Clear processes",
-        suggestions: Some(vec!["ntp associations"]),
+        suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: None,
-        execute: |args, context, _| {
+        execute: |args, _context, _| {
             match args.get(0) {
                 None => {
                     ProcessCommand::new("clear")
@@ -1675,6 +1710,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "service password-encryption",
         description: "Enable password encryption",
         suggestions: Some(vec!["password-encryption"]),
+        arg_suggest: Some(vec!["password-encryption"]),
         suggestions1: Some(vec!["password-encryption"]),
         suggestions2: None,
         options: None,
@@ -1721,6 +1757,12 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                 "-h",
                 "--help"
             ]),
+            arg_suggest: Some(vec![
+                "-v",
+                "-l",
+                "-h",
+                "--help"
+            ]),
             suggestions1: Some(vec![
                 "-v",
                 "-l",
@@ -1729,7 +1771,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             ]),
             suggestions2: None,
             options: None,
-            execute: |args, context, _| {
+            execute: |args, _context, _| {
                     match args.get(0) {
                         Some(&"-v") => {
                             if args.len() == 1 {
@@ -1801,17 +1843,30 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "enable dhcp", 
         description: "Enabling dhcp for network connectivity", 
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: None, 
-        execute: |args, _context, _| {
+        execute: |_args, _context, _| {
            
-            execute_spawn_process("sudo", &["dhclient", "-r"]); 
-            println!("Removed existing dhcp configurations");
-            execute_spawn_process("sudo", &["dhclient"]); 
-            println!("Enabled dhcp configurations");
-            execute_spawn_process("sudo", &["systemctl", "restart", "NetworkManager"]); 
-            println!("Restart Network services");
+            if let Err(e) = execute_spawn_process("sudo", &["dhclient", "-r"]) {
+                eprintln!("Failed to release DHCP: {}", e);
+            } else {
+                println!("Removed existing DHCP configurations");
+            }
+            
+            if let Err(e) = execute_spawn_process("sudo", &["dhclient"]) {
+                eprintln!("Failed to enable DHCP: {}", e);
+            } else {
+                println!("Enabled DHCP configurations");
+            }
+            
+            if let Err(e) = execute_spawn_process("sudo", &["systemctl", "restart", "NetworkManager"]) {
+                eprintln!("Failed to restart network services: {}", e);
+            } else {
+                println!("Restarted network services");
+            }
+            
             Ok(())
 
         },
@@ -1823,6 +1878,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "ping",
         description: "Ping a specific IP address to check reachability",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: Some(vec!["<ip-address>    - Enter the ip-address"]),
@@ -1831,8 +1887,10 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                 let ip = args[0].to_string();
                 
                 println!("Pinging {} with 32 bytes of data:", ip);
+                if let Err(e) = execute_spawn_process("ping", &["-c", "4", "-s", "32", &ip]) {
+                    eprintln!("Failed to ping: {}", e);
+                }
                 
-                execute_spawn_process("ping", &["-c", "4", "-s", "32", &ip]);
                 Ok(())
 
             } else {
@@ -1846,6 +1904,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "traceroute",
         description: "Trace the route to a specific IP address or hostname",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: Some(vec!["<ip-address/hostname>    - Enter the IP address or hostname"]),
@@ -1854,8 +1913,10 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                 let target = args[0].to_string();
     
                 println!("Tracing route to {} over a maximum of 30 hops", target);
-    
-                execute_spawn_process("traceroute", &["-n", "-m", "30", &target]);
+                if let Err(e) = execute_spawn_process("traceroute", &["-n", "-m", "30", &target]) {
+                    eprintln!("Failed to traceroue: {}", e);
+                }
+                
                 println!("Trace Completed.");
                 Ok(())
 
@@ -1871,6 +1932,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "network",
         description: "Configure the network commands",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: Some(vec!["ip", "area", "netmask"]),
         options: Some(vec!["<interface>         - Mention the interface"]),
@@ -1908,6 +1970,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "redistribute ospf and rip",
         description: "redistribute ospf and rip",
         suggestions: Some(vec!["rip", "ospf"]),
+        arg_suggest: Some(vec!["rip", "ospf"]),
         suggestions1: Some(vec!["rip", "ospf"]),
         suggestions2: None,
         options: None,
@@ -1935,6 +1998,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "valid ospf and rip",
         description: "valid ospf and rip",
         suggestions: Some(vec!["rip", "ospf"]),
+        arg_suggest: Some(vec!["rip", "ospf"]),
         suggestions1: Some(vec!["rip", "ospf"]),
         suggestions2: None,
         options: None,
@@ -1962,6 +2026,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "controller status",
         description: "Define controller status",
         suggestions: Some(vec!["status"]),
+        arg_suggest: Some(vec!["status"]),
         suggestions1: Some(vec!["status"]),
         suggestions2: None,
         options: Some(vec!["<status>        - Define the controller status"]),
@@ -1988,6 +2053,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "bridge_name",
         description: "Configures the name of a bridge ",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: Some(vec!["<name>        - Define the bridge name"]),
@@ -2012,6 +2078,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "add bridge and interface",
         description: "Adds the bridge and interface ",
         suggestions: Some(vec!["bridge", "interface"]),
+        arg_suggest: Some(vec!["bridge", "interface"]),
         suggestions1: Some(vec!["bridge", "interface"]),
         suggestions2: None,
         options: Some(vec!["<name>        - Define the specified name"]),
@@ -2045,6 +2112,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "router name",
         description: "Configures the name of a router (router1)",
         suggestions: Some(vec!["name"]),
+        arg_suggest: Some(vec!["name"]),
         suggestions1: Some(vec!["name"]),
         suggestions2: None,
         options: Some(vec!["<name>        - Define the router name"]),
@@ -2069,6 +2137,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "segment id",
         description: "Configures VLAN segment ID ",
         suggestions: Some(vec!["id"]),
+        arg_suggest: Some(vec!["id"]),
         suggestions1: Some(vec!["id"]),
         suggestions2: None,
         options: Some(vec!["<ID>        - Define the ID"]),
@@ -2093,6 +2162,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "vlan id",
         description: "Assigns VLAN ID",
         suggestions: Some(vec!["id"]),
+        arg_suggest: Some(vec!["id"]),
         suggestions1: Some(vec!["id"]),
         suggestions2: None,
         options: Some(vec!["<ID>        - Define the ID"]),
@@ -2119,6 +2189,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "policy",
         description: "Sets the QoS policy",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: Some(vec!["<policy>        - Set the QOS policy"]),
@@ -2143,6 +2214,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "priority",
         description: "Assigns priority level to an interface",
         suggestions: Some(vec!["level"]),
+        arg_suggest: Some(vec!["level"]),
         suggestions1: Some(vec!["level"]),
         suggestions2: None,
         options: Some(vec!["<level>        - Set the priority level"]),
@@ -2170,6 +2242,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "mode",
         description: "Sets the port security mode to static",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: Some(vec!["<mode>        - Set the mode"]),
@@ -2194,6 +2267,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "max_devices",
         description: "Limits the maximum number of devices allowed per port to 2. ",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: Some(vec!["<number>        - Set the maximum amount of number of devices"]),
@@ -2218,6 +2292,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "violation_status",
         description: "Configures the violation mode to restrict, allowing monitoring and logging of security violations while restricting unauthorized devices.",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: Some(vec!["<status>        - Set the status"]),
@@ -2244,6 +2319,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "logging_level",
         description: "Define logging level",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: Some(vec!["<level>        - Define the logging level"]),
@@ -2270,6 +2346,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "holdtime",
         description: "Sets the hold time for discovery messages to the default value.",
         suggestions: None,
+        arg_suggest: None,
         suggestions1: None,
         suggestions2: None,
         options: Some(vec!["<time|default>        - Set the hold time in seconds"]),
@@ -2294,6 +2371,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
         name: "Reinit",
         description: "Sets the reinitialization behavior to the default setting. ",
         suggestions: Some(vec!["behaviour"]),
+        arg_suggest: Some(vec!["behaviour"]),
         suggestions1: Some(vec!["behaviour"]),
         suggestions2: None,
         options: Some(vec!["<behaviour>        - Define the reinitialization behaviour"]),
@@ -2320,7 +2398,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
 
 fn copy_run_config(running_config: &str, destination: &str, context: &mut CliContext) -> Result<(), String> {
     if destination == "startup-config" {
-        save_running_to_startup(context);
+        let _ = save_running_to_startup(context);
         Ok(())
     } else {
         // Assume destination is a filename
