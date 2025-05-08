@@ -39,47 +39,6 @@ use std::fs;
 use std::path::Path;
 use std::thread;
 
-/// Main function of the CLI application.
-///
-/// This function initializes the Command-Line Interface (CLI) environment, processes user input,
-/// and manages the interaction loop. The CLI supports commands for various configurations and
-/// operations, with features such as command completion, history, and real-time mode switching.
-///
-/// # Functionality
-/// - Builds a registry of commands and retrieves their names for command completion.
-/// - Configures the CLI context, including hostname, modes, and other configurations.
-/// - Sets up a Rustyline editor for user input with custom history and completion behavior.
-/// - Configures signal handling for `Ctrl+C` and `Ctrl+Z`, emulating Cisco router behavior:
-///   - In configuration modes, returns to Privileged mode
-///   - In User mode, does nothing special
-/// - Processes user input in a loop, executing commands, handling history, and responding to errors.
-///
-/// # Key Components
-/// - **Command Registry**: A collection of available CLI commands, dynamically used for completion.
-/// - **CLI Context**: Contains the current CLI state, including modes, selected interfaces, and VLANs.
-/// - **Rustyline Editor**: Provides user input handling with features like auto-completion and history.
-/// - **Clock Settings**: Maintains an optional system clock for configuration purposes.
-/// - **Signal Handling**: Manages `Ctrl+C` and `Ctrl+Z` signals to emulate Cisco router behavior.
-///
-/// # Example Usage
-/// ```bash
-/// > Network> enable
-/// > Network# configure terminal
-/// > Network(config)# [Ctrl+C pressed]
-/// > Network# exit cli
-/// Exiting CLI...
-/// ```
-///
-/// # Signals
-/// - `Ctrl+C`: In configuration modes, returns to Privileged mode. In User mode, does nothing.
-/// - `Ctrl+Z`: In configuration modes, returns to Privileged mode. In User mode, does nothing.
-///
-/// # Errors
-/// - Any error during initialization or user input handling (e.g., `ReadlineError`) is logged and
-///   terminates the CLI gracefully.
-///
-/// # History
-/// - Command history is stored in `history.txt` and is reloaded on subsequent runs.
 fn main() {
 
     // Build the registry of commands and retrieve their names

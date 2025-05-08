@@ -174,7 +174,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                     },
                     "qos_manager" => {
                         if matches!(context.current_mode, Mode::QosMode) {
-                            if args.len() == 2 {  
+                            if args.len() == 3 {  
                                 let id = args[2];     
                                 println!("QOS Manager for the id {} is enabled.", id);
                                 //Back-end implementation
@@ -2355,7 +2355,7 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                 if args.len() == 1 {
                     let time = args[0];
                     //NetworkingManager.AutoDiscoveryManager.holdtime=default 
-                    println!("Holt time set to {}s", time);
+                    println!("Hold time set to {}s", time);
                     Ok(())
                 } 
                 else {

@@ -13,15 +13,6 @@ use rustyline::error::ReadlineError;
 use std::collections::HashMap;
 
 
-/// A custom completer for the CLI application.
-///
-/// The `CommandCompleter` provides suggestions for commands based on user input.
-/// It integrates with the `rustyline` crate to offer real-time command-line assistance.
-///
-/// # Fields
-/// - `commands`: A vector of strings containing the list of available commands.
-/// - `current_mode`: Gets the current mode of the cli
-/// 
 #[derive(Clone)]
 pub struct CommandCompleter {
     pub commands: HashMap<String, Vec<String>>,
@@ -29,32 +20,7 @@ pub struct CommandCompleter {
     pub context: CliContext,
 }
 
-/// Implementation of the `CommandCompleter` struct.
-///
-/// Provides a constructor for creating a new `CommandCompleter` instance, which is responsible
-/// for handling command completion based on the available commands and the current CLI mode.
 impl CommandCompleter {
-    /// Creates a new `CommandCompleter` instance.
-    ///
-    /// # Arguments
-    /// - `commands`: A `HashMap` where the keys are command names (as `String`) and the values are
-    ///   vectors of possible completions or subcommands associated with each command.
-    /// - `current_mode`: The current CLI mode (`Mode`), which influences the available commands
-    ///   and their completion behavior.
-    ///
-    /// # Returns
-    /// A new instance of `CommandCompleter` initialized with the provided commands and current mode.
-    ///
-    /// # Example
-    /// ```rust
-    /// use std::collections::HashMap;
-    /// 
-    /// let mut commands = HashMap::new();
-    /// commands.insert("show".to_string(), vec!["ip".to_string(), "version".to_string()]);
-    /// commands.insert("configure".to_string(), vec!["terminal".to_string()]);
-    /// 
-    /// let completer = CommandCompleter::new(commands, Mode::UserMode);
-    /// ```
     pub fn new(commands: HashMap<String, Vec<String>>, current_mode: Mode, context: CliContext) -> Self {
         CommandCompleter {
             commands,
@@ -65,25 +31,8 @@ impl CommandCompleter {
 
 }
 
-
-/// Implements the `Completer` trait for the `CommandCompleter` struct.
 impl Completer for CommandCompleter {
     type Candidate = Pair;
-
-    /// Generates a list of command suggestions based on the current user input.
-    ///
-    /// # Arguments
-    /// - `line`: The current input line from the user.
-    /// - `pos`: The cursor position within the line.
-    /// - `_ctx`: The rustyline context.
-    ///
-    /// # Returns
-    /// A tuple where:
-    /// - The first element is the starting position of the match in the input line.
-    /// - The second element is a vector of `Pair` objects representing the suggestions.
-    ///
-    /// # Errors
-    /// Returns a `ReadlineError` if an error occurs during completion.
     fn complete(
         &self,
         line: &str,

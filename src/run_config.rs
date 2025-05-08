@@ -21,22 +21,6 @@ pub fn save_running_to_startup(context: &CliContext) -> Result<(), String> {
     }
 }
 
-
-/// Retrieves the current running configuration of the device.
-/// 
-/// The running configuration is a volatile piece of information that reflects 
-/// the current state of the device, including any changes made to it. This 
-/// configuration is stored in memory rather than NVRAM, meaning it will be lost 
-/// when the device loses power.
-/// 
-/// # Returns
-/// A `String` representing the current running configuration of the device.
-/// 
-/// # Example
-/// ```rust
-/// let config = get_running_config();
-/// println!("Running Configuration: {}", config);
-/// ``` 
 pub fn get_running_config(context: &CliContext) -> String {
     let hostname = &context.config.hostname;
     let encrypted_password = context.config.encrypted_password.clone().unwrap_or_default();
