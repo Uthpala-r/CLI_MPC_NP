@@ -1047,11 +1047,11 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                 if matches!(context.current_mode, Mode::UserMode | Mode ::PrivilegedMode){
                     return match args.get(0) {
                         Some(&"clock") => {
-                            show_clock(clock);
+                            show_clock();
                             Ok(())
                         },
                         Some(&"uptime") => {
-                            show_uptime(clock);
+                            show_uptime();
                             Ok(())
                         },
                         Some(&"version") => {
@@ -1192,11 +1192,11 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                         
                         match show_args.get(0) {
                             Some(&"clock") => {
-                                show_clock(clock);
+                                show_clock();
                                 Ok(())
                             },
                             Some(&"uptime") => {
-                                show_uptime(clock);
+                                show_uptime();
                                 Ok(())
                             },
                             Some(&"version") => {

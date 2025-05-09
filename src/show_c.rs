@@ -1,24 +1,20 @@
-use crate::clock_settings::{Clock, handle_show_clock, handle_show_uptime};
+use crate::clock_settings::{Clock, handle_show_clock};
 use crate::cliconfig::CliContext;
 use crate::network_config::{read_lines, execute_spawn_process};
 use crate::run_config::{get_running_config};
 
-pub fn show_clock(clock: &mut Option<Clock>) -> String {
-    if let Some(clock) = clock {
-        handle_show_clock(clock);
-        "Clock displayed successfully.".to_string() 
-    } else {
-        "Clock functionality is unavailable.".to_string() 
+pub fn show_clock() -> Result<(), String> {
+    if let Err(e) = execute_spawn_process("date", &["-u"]) {
+        eprintln!("Failed to show the uptime: {}", e);
     }
+    Ok(())
 }
 
-pub fn show_uptime(clock: &mut Option<Clock>) -> String {
-    if let Some(clock) = clock {
-        handle_show_uptime(clock);
-        "System Uptime displayed successfully.".to_string()
-    } else {
-        "Clock functionality is unavailable.".to_string()
+pub fn show_uptime() -> Result<(), String> {
+    if let Err(e) = execute_spawn_process("uptime", &[]) {
+        eprintln!("Failed to show the uptime: {}", e);
     }
+    Ok(())
 }
 
 pub fn show_version() {
@@ -28,7 +24,7 @@ pub fn show_version() {
 
 pub fn show_sessions() -> Result<(), String> {
     //Use 'w' command to access the system Telnet sessions
-    if let Err(e) = execute_spawn_process("sudo", &["w"]) {
+    if let Err(e) = execute_spawn_process("ps", &[]) {
         eprintln!("Failed to execute the sessions: {}", e);
     }
     
@@ -38,8 +34,14 @@ pub fn show_sessions() -> Result<(), String> {
 pub fn show_controllers() -> Result<(), String> {
     
     //Triggers the command ‘lspci’ or ‘sudo lshw -class network’ and extract the relevant details.
-    if let Err(e) = execute_spawn_process("sudo", &["lshw", "-class", "network"]) {
-        eprintln!("Failed to show controllers: {}", e);
+    println!("USB Controllers");
+    if let Err(e) = execute_spawn_process("lsusb", &[]) {
+        eprintln!("Failed to show usb controllers: {}", e);
+    } 
+    println!("");
+    println!("PCI Controllers");
+    if let Err(e) = execute_spawn_process("lspci", &[]) {
+        eprintln!("Failed to show pcicontrollers: {}", e);
     }
     
     Ok(())
@@ -93,7 +95,7 @@ pub fn show_start_conf(context: &CliContext) -> Result<(), String> {
 pub fn show_interfaces() -> Result<(), String> {
     
     //Use ls /sys/class/net command
-    if let Err(e) = execute_spawn_process("ls", &["/sys/class/net"]) {
+    if let Err(e) = execute_spawn_process("ip", &["link", "show"]) {
         eprintln!("Failed to show interfaces: {}", e);
     }
     
@@ -126,7 +128,7 @@ pub fn show_ip_route() -> Result<(), String> {
 pub fn show_login() -> Result<(), String> {
     
     //Triggers the system ‘last’ and ‘faillog’ commands.
-    if let Err(e) = execute_spawn_process("sudo", &["last"]) {
+    if let Err(e) = execute_spawn_process("id", &[]) {
         eprintln!("Failed to show logins: {}", e);
     }
     
@@ -136,7 +138,7 @@ pub fn show_login() -> Result<(), String> {
 
 pub fn show_proc() -> Result<(), String> {
     //Triggers the system commands (eg. Top, lscpu) and display the output 
-    if let Err(e) = execute_spawn_process("sudo", &["lscpu"]) {
+    if let Err(e) = execute_spawn_process("cat", &["/proc/cpuinfo"]) {
         eprintln!("Failed to show processors: {}", e);
     }
     Ok(()) 
