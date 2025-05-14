@@ -1043,15 +1043,15 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
             suggestions1: None,
             suggestions2: Some(vec!["interface", "brief", "associations"]),
             options: None,
-            execute: |args, context, clock| {
+            execute: |args, context, _clock| {
                 if matches!(context.current_mode, Mode::UserMode | Mode ::PrivilegedMode){
                     return match args.get(0) {
                         Some(&"clock") => {
-                            show_clock();
+                            let _ = show_clock();
                             Ok(())
                         },
                         Some(&"uptime") => {
-                            show_uptime();
+                            let _ = show_uptime();
                             Ok(())
                         },
                         Some(&"version") => {
@@ -1192,11 +1192,11 @@ pub fn build_command_registry() -> HashMap<&'static str, Command> {
                         
                         match show_args.get(0) {
                             Some(&"clock") => {
-                                show_clock();
+                                let _ = show_clock();
                                 Ok(())
                             },
                             Some(&"uptime") => {
-                                show_uptime();
+                                let _ = show_uptime();
                                 Ok(())
                             },
                             Some(&"version") => {
